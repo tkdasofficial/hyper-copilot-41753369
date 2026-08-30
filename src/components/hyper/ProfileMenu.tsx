@@ -17,6 +17,9 @@ const links = [
 ] as const;
 
 export function ProfileMenu() {
+  // TODO: read the authenticated user from the backend session.
+  const user = account;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -25,13 +28,15 @@ export function ProfileMenu() {
           aria-label="Account menu"
           className="grid h-9 w-9 bg-primary place-items-center rounded-full text-[12px] font-extrabold text-primary-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          TK
+          {user ? user.initials : <User className="h-4 w-4" strokeWidth={2} />}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56 rounded-2xl">
         <DropdownMenuLabel className="flex flex-col gap-0.5">
-          <span className="text-[13px] font-bold">TK Das</span>
-          <span className="text-[11.5px] font-medium text-muted-foreground">Hyper Pro trial</span>
+          <span className="text-[13px] font-bold">{user ? user.name : "Guest"}</span>
+          <span className="text-[11.5px] font-medium text-muted-foreground">
+            {user ? user.plan : "Not signed in"}
+          </span>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         {links.map((l) => {
