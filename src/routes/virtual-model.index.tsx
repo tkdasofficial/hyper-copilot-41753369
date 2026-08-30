@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { StudioLayout } from "@/components/hyper/StudioLayout";
@@ -13,6 +14,7 @@ import {
 } from "@/components/hyper/StudioControls";
 import { ModelRail, type VirtualModel } from "@/components/hyper/ModelRail";
 import { RecentCreations } from "@/components/hyper/RecentCreations";
+import { generateWithVirtualModel, listVirtualModels } from "@/lib/virtual-model.functions";
 
 export const Route = createFileRoute("/virtual-model/")({
   head: () => ({
@@ -46,8 +48,18 @@ const lenses = ["24mm", "35mm", "50mm", "85mm", "135mm"] as const;
 
 function VirtualModelStudio() {
   const navigate = useNavigate();
-  // TODO: load the signed-in user's saved virtual models from the backend.
-  const [models] = useState<VirtualModel[]>([]);
+  const queryClient = useQueryClient();
+  const { data: saved } = useQuery({
+    queryKey: ["virtual-models"],
+    queryFn: () => listVirtualModels(),
+  });
+  const models: VirtualModel[] = (saved ?? []).map((m) => ({
+    id: m.id,
+    name: m.name,
+    meta: m.description,
+    headshotUrl: m.headshotUrl,
+    status: m.status,
+  }));
   const [selected, setSelected] = useState<string | null>(null);
 
   const [prompt, setPrompt] = useState("");
@@ -68,6 +80,41 @@ function VirtualModelStudio() {
   const [faceLock, setFaceLock] = useState(true);
 
   const model = models.find((m) => m.id === selected) ?? null;
+  const scenePrompt = () =>
+    [
+      prompt.trim(),
+      outfit.length ? `wearing ${outfit.join(", ").toLowerCase()}` : "",
+      acc.length ? `with ${acc.join(", ").toLowerCase()}` : "",
+      `${bg.toLowerCase()} background`,
+      `${light.toLowerCase()} lighting`,
+      `${shot.toLowerCase()} shot`,
+      `${lens} lens`,
+      `${res} resolution, ultra detailed`,
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+  const render = useMutation({
+    mutationFn: async () => {
+      const runs = Array.from({ length: count }, () =>
+        generateWithVirtualModel({
+          data: {
+            modelId: selected!,
+            prompt: scenePrompt(),
+            negativePrompt: negative.trim(),
+            aspect: ratio,
+          },
+        }),
+      );
+      return Promise.all(runs);
+    },
+    onSuccess: () => {
+      toast.success(`Generated ${count} render${count === 1 ? "" : "s"}`);
+      void queryClient.invalidateQueries({ queryKey: ["generations"] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Generation failed"),
+  });
+
   const toggle = (setter: (fn: (v: string[]) => string[]) => void) => (v: string) =>
     setter((l) => (l.includes(v) ? l.filter((x) => x !== v) : [...l, v]));
 
@@ -133,18 +180,15 @@ function VirtualModelStudio() {
 
         <button
           type="button"
-          onClick={() =>
-            !model
-              ? toast.error("Select a model first.")
-              : prompt.trim()
-                ? toast.success(`Queued ${count} render${count === 1 ? "" : "s"}`, {
-                    description: `${model.name} · ${ratio} · ${res} · ${shot}`,
-                  })
-                : toast.error("Describe the shot first.")
-          }
-          className="w-full rounded-full bg-primary py-3 text-[14px] font-bold text-primary-foreground transition-opacity hover:opacity-90"
+          disabled={render.isPending}
+          onClick={() => {
+            if (!model) return toast.error("Select a model first.");
+            if (!prompt.trim()) return toast.error("Describe the shot first.");
+            render.mutate();
+          }}
+          className="w-full rounded-full bg-primary py-3 text-[14px] font-bold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          Generate
+          {render.isPending ? "Generating…" : "Generate"}
         </button>
 
         <RecentCreations />
