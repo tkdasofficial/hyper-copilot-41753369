@@ -20,7 +20,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { streamImage } from "@/lib/streamImage";
+import {
+  generateImage,
+  generateSpeech,
+  pollVideo,
+  startVideo,
+  uploadReference,
+} from "@/lib/generation.functions";
 import { ResultsGrid, type GenResult } from "./ResultsGrid";
 
 const modalities = [
@@ -32,24 +38,33 @@ const modalities = [
 
 const imageModels = [
   {
-    id: "google/gemini-3.1-flash-lite-image",
+    id: "hyper-image-speed",
     name: "Hyper Image Speed",
-    note: "Fastest drafts",
+    note: "Fastest drafts · text to image",
   },
   {
-    id: "google/gemini-3.1-flash-image",
+    id: "hyper-image-flash",
     name: "Hyper Image Flash",
-    note: "Balanced quality & speed",
+    note: "Balanced · text & image to image",
   },
-  { id: "google/gemini-3-pro-image", name: "Hyper Image Quality", note: "Highest fidelity" },
+  {
+    id: "hyper-image-quality",
+    name: "Hyper Image Quality",
+    note: "Highest fidelity · text & image to image",
+  },
 ];
 
 const modelsByModality: Record<string, { id: string; name: string; note: string }[]> = {
   Image: imageModels,
-  Video: [{ id: "hyper-video-omni", name: "Hyper Video Omni", note: "All-in-one video model" }],
-  Audio: [{ id: "hyper-audio-omni", name: "Hyper Audio Omni", note: "All-in-one audio model" }],
+  Video: [
+    { id: "hyper-video-omni", name: "Hyper Video Omni", note: "Text & image to video" },
+  ],
+  Audio: [
+    { id: "hyper-audio-omni", name: "Hyper Audio Omni", note: "Text to speech" },
+  ],
   Vector: imageModels,
 };
+
 
 const ratios = [
   { label: "1:1", note: "Square", w: 1, h: 1 },
