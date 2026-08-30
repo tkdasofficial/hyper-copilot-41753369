@@ -90,9 +90,13 @@ function LibraryPage() {
 
         {visible.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-surface/40 p-10 text-center">
-            <p className="text-[14px] font-semibold">No assets found</p>
+            <p className="text-[14px] font-semibold">
+              {assets.length === 0 ? "Your library is empty" : "No assets found"}
+            </p>
             <p className="mt-1 text-[12.5px] text-muted-foreground">
-              Try a different search or filter, or generate something new.
+              {assets.length === 0
+                ? "Everything you generate will be saved here."
+                : "Try a different search or filter, or generate something new."}
             </p>
           </div>
         ) : (
