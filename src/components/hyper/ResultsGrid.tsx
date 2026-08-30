@@ -6,24 +6,48 @@ export type GenResult = {
   prompt: string;
   dataUrl: string;
   isFinal: boolean;
+  kind?: "image" | "video" | "audio";
   model: string;
   ratioLabel: string;
   styleName: string;
 };
 
+function extFor(kind: GenResult["kind"]) {
+  if (kind === "video") return "mp4";
+  if (kind === "audio") return "wav";
+  return "png";
+}
+
 function ResultCard({ result }: { result: GenResult }) {
-  const hasImage = result.dataUrl.length > 0;
+  const kind = result.kind ?? "image";
+  const hasMedia = result.dataUrl.length > 0;
   return (
     <figure className="group relative aspect-square overflow-hidden rounded-2xl border border-border bg-surface">
-      {hasImage ? (
-        <img
-          src={result.dataUrl}
-          alt={result.prompt}
-          className={cn(
-            "h-full w-full object-cover transition-[filter] duration-500",
-            result.isFinal ? "blur-0" : "blur-2xl",
-          )}
-        />
+      {hasMedia ? (
+        kind === "video" ? (
+          <video
+            src={result.dataUrl}
+            controls
+            playsInline
+            className="h-full w-full object-cover"
+          />
+        ) : kind === "audio" ? (
+          <div className="flex h-full w-full flex-col justify-center gap-3 p-4">
+            <p className="line-clamp-4 text-[12.5px] leading-snug text-muted-foreground">
+              {result.prompt}
+            </p>
+            <audio src={result.dataUrl} controls className="w-full" />
+          </div>
+        ) : (
+          <img
+            src={result.dataUrl}
+            alt={result.prompt}
+            className={cn(
+              "h-full w-full object-cover transition-[filter] duration-500",
+              result.isFinal ? "blur-0" : "blur-2xl",
+            )}
+          />
+        )
       ) : (
         <div className="grid h-full w-full place-items-center">
           <Loader2 className="h-7 w-7 animate-spin text-foreground/70" strokeWidth={2} />
@@ -31,22 +55,24 @@ function ResultCard({ result }: { result: GenResult }) {
       )}
       {result.isFinal && (
         <>
-          <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 bg-gradient-to-t from-background via-background/80 to-transparent p-3 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
-            <p className="line-clamp-2 text-[12.5px] leading-snug text-foreground">
-              {result.prompt}
-            </p>
-            <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {result.model} · {result.ratioLabel}
-            </p>
-          </figcaption>
+          {kind !== "audio" && (
+            <figcaption className="pointer-events-none absolute inset-x-0 bottom-0 translate-y-2 bg-gradient-to-t from-background via-background/80 to-transparent p-3 opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:opacity-100">
+              <p className="line-clamp-2 text-[12.5px] leading-snug text-foreground">
+                {result.prompt}
+              </p>
+              <p className="mt-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {result.model} · {result.ratioLabel}
+              </p>
+            </figcaption>
+          )}
           <div className="absolute right-3 top-3 flex gap-1.5 opacity-0 transition-opacity group-hover:opacity-100">
             <span className="grid h-8 w-8 place-items-center rounded-full border border-border-strong bg-background/70 backdrop-blur">
               <Check className="h-4 w-4" strokeWidth={2} />
             </span>
             <a
               href={result.dataUrl}
-              download={`hyper-${result.id}.png`}
-              aria-label="Download image"
+              download={`hyper-${result.id}.${extFor(kind)}`}
+              aria-label="Download result"
               className="grid h-8 w-8 place-items-center rounded-full border border-border-strong bg-background/70 backdrop-blur transition-colors hover:bg-background"
             >
               <Download className="h-4 w-4" strokeWidth={2} />
@@ -57,6 +83,7 @@ function ResultCard({ result }: { result: GenResult }) {
     </figure>
   );
 }
+
 
 export function ResultsGrid({
   results,
