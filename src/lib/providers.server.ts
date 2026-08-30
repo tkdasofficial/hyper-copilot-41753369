@@ -69,25 +69,50 @@ export async function pixazoStableDiffusion(input: {
   seed?: number | undefined;
   steps?: number | undefined;
   guidance?: number | undefined;
+  /** Denoise amount: lower keeps the reference identity, higher allows change. */
+  strength?: number | undefined;
 }): Promise<string> {
-  const data = await pixazoPost<{ imageUrl?: string; output?: string }>(
-    "/inpainting/v1/getImage",
-    {
-      prompt: input.prompt,
-      imageUrl: input.imageUrl,
-      ...(input.maskUrl ? { maskUrl: input.maskUrl } : {}),
-      negative_prompt: [input.negativePrompt, DEFAULT_NEGATIVE].filter(Boolean).join(", "),
-      width: input.width,
-      height: input.height,
-      num_steps: input.steps ?? 30,
-      guidance: input.guidance ?? 7.5,
-      ...(input.seed === undefined ? {} : { seed: input.seed }),
-    },
-  );
+  const base = {
+    prompt: input.prompt,
+    imageUrl: input.imageUrl,
+    ...(input.maskUrl ? { maskUrl: input.maskUrl } : {}),
+    negative_prompt: [input.negativePrompt, DEFAULT_NEGATIVE].filter(Boolean).join(", "),
+    width: input.width,
+    height: input.height,
+    num_steps: input.steps ?? 30,
+    guidance: input.guidance ?? 7.5,
+    ...(input.seed === undefined ? {} : { seed: input.seed }),
+  };
+  const withStrength =
+    input.strength === undefined ? base : { ...base, strength: input.strength };
+
+  let data: { imageUrl?: string; output?: string };
+  try {
+    data = await pixazoPost("/inpainting/v1/getImage", withStrength);
+  } catch (err) {
+    // Some deployments reject unknown sampler fields; retry with the safe body.
+    if (input.strength === undefined) throw err;
+    data = await pixazoPost("/inpainting/v1/getImage", base);
+  }
   const url = data.imageUrl ?? data.output;
   if (!url) throw new Error("Image provider returned no image");
   return url;
 }
+
+/** Runs a provider call again once on a transient failure. */
+export async function withRetry<T>(fn: () => Promise<T>, attempts = 2): Promise<T> {
+  let lastError: unknown;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastError = err;
+      if (i < attempts - 1) await new Promise((r) => setTimeout(r, 800 * (i + 1)));
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Generation failed");
+}
+
 
 /** Hyper Image Speed — Flux 1 Schnell (text-to-image only). */
 export async function pixazoFluxSchnell(input: {
