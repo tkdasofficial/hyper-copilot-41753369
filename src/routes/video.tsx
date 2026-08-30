@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { X } from "lucide-react";
 import { toast } from "sonner";
 import { StudioLayout } from "@/components/hyper/StudioLayout";
-import { Chips, Panel, RatioBlocks, Segment, SliderRow, SwitchRow, TextRow } from "@/components/hyper/StudioControls";
+import { Panel, RatioBlocks, Segment, SliderRow, SwitchRow, TextRow } from "@/components/hyper/StudioControls";
 import { RecentCreations } from "@/components/hyper/RecentCreations";
-import { pollVideo, startVideo } from "@/lib/generation.functions";
+import { pollVideo, startVideo, uploadReference } from "@/lib/generation.functions";
+import { VIDEO_DURATIONS, VIDEO_FPS, VIDEO_RESOLUTIONS } from "@/lib/media.shared";
 
 export const Route = createFileRoute("/video")({
   head: () => ({
@@ -14,12 +16,12 @@ export const Route = createFileRoute("/video")({
       {
         name: "description",
         content:
-          "Create cinematic AI videos with Hyper Video Omni: aspect ratios, duration, camera motion, frame rate and soundtrack controls in Hyper Copilot's Video Studio.",
+          "Create cinematic AI videos with Hyper Video Omni: aspect ratios, duration, camera motion, frame rate and start/end frame references in Hyper Copilot's Video Studio.",
       },
       { property: "og:title", content: "Video Studio — AI Video Generation" },
       {
         property: "og:description",
-        content: "Camera, motion, duration and soundtrack controls for production-grade AI video.",
+        content: "Camera, motion, duration and frame references for production-grade AI video.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -30,32 +32,104 @@ export const Route = createFileRoute("/video")({
 
 const models = ["Hyper Video Omni"] as const;
 const ratios = ["16:9", "9:16", "1:1"] as const;
-const resolutions = ["720p", "1080p", "4K"] as const;
-const durations = ["4s", "6s", "8s"] as const;
-const frameRates = ["24 fps", "30 fps", "60 fps"] as const;
+const resolutions = VIDEO_RESOLUTIONS;
+const durations = VIDEO_DURATIONS.map((d) => `${d}s`) as unknown as readonly string[];
+const frameRates = VIDEO_FPS.map((f) => `${f} fps`) as unknown as readonly string[];
 const cameraMoves = ["Static", "Pan", "Tilt", "Dolly In", "Dolly Out", "Orbit", "Crane", "Handheld"] as const;
 const styles = ["Cinematic", "Photoreal", "Anime", "3D Render", "Documentary", "Neon Noir"] as const;
-const refModes = ["Start frame", "End frame", "Reference subject", "Style reference"] as const;
+
+type FrameSlot = "start" | "end";
+type FrameFile = { name: string; previewUrl: string; dataUrl: string };
+
+function FrameUpload({
+  label,
+  note,
+  file,
+  onPick,
+  onClear,
+}: {
+  label: string;
+  note: string;
+  file: FrameFile | null;
+  onPick: (f: File) => void;
+  onClear: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  return (
+    <div className="rounded-2xl border border-border bg-background p-3">
+      <div className="flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[13px] font-semibold">{label}</p>
+          <p className="mt-0.5 text-[11.5px] text-muted-foreground">{note}</p>
+        </div>
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) onPick(f);
+            e.target.value = "";
+          }}
+        />
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          className="shrink-0 rounded-full border border-border px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-surface-2"
+        >
+          {file ? "Replace" : "Upload"}
+        </button>
+      </div>
+      {file ? (
+        <div className="relative mt-3 h-24 w-24 overflow-hidden rounded-xl border border-border">
+          <img src={file.previewUrl} alt={file.name} className="h-full w-full object-cover" />
+          <button
+            type="button"
+            aria-label={`Remove ${label}`}
+            onClick={onClear}
+            className="absolute right-1 top-1 grid h-5 w-5 place-items-center rounded-full bg-background/85"
+          >
+            <X className="h-3 w-3" strokeWidth={2.6} />
+          </button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 function VideoStudio() {
   const [prompt, setPrompt] = useState("");
   const [negative, setNegative] = useState("");
   const [model, setModel] = useState<(typeof models)[number]>(models[0]);
   const [ratio, setRatio] = useState<(typeof ratios)[number]>(ratios[0]);
-  const [res, setRes] = useState<(typeof resolutions)[number]>(resolutions[0]);
-  const [duration, setDuration] = useState<(typeof durations)[number]>(durations[2]);
-  const [fps, setFps] = useState<(typeof frameRates)[number]>(frameRates[0]);
+  const [res, setRes] = useState<string>(resolutions[1] ?? "720p");
+  const [duration, setDuration] = useState<string>(durations[2] ?? "8s");
+  const [fps, setFps] = useState<string>(frameRates[0] ?? "24 fps");
   const [camera, setCamera] = useState<(typeof cameraMoves)[number]>(cameraMoves[0]);
   const [motion, setMotion] = useState(55);
   const [style, setStyle] = useState<(typeof styles)[number]>(styles[0]);
   const [styleStrength, setStyleStrength] = useState(60);
-  const [modes, setModes] = useState<string[]>([]);
-  const [audio, setAudio] = useState(true);
+  const [frames, setFrames] = useState<Record<FrameSlot, FrameFile | null>>({
+    start: null,
+    end: null,
+  });
+  const [seed, setSeed] = useState(() => Math.floor(Math.random() * 999999));
   const [seedLock, setSeedLock] = useState(false);
-  const [count, setCount] = useState(1);
   const [busy, setBusy] = useState(false);
   const [clipUrl, setClipUrl] = useState<string | null>(null);
   const queryClient = useQueryClient();
+
+  const pickFrame = (slot: FrameSlot, file: File) => {
+    const previewUrl = URL.createObjectURL(file);
+    const reader = new FileReader();
+    reader.onload = () =>
+      setFrames((f) => ({
+        ...f,
+        [slot]: { name: file.name, previewUrl, dataUrl: String(reader.result ?? "") },
+      }));
+    reader.readAsDataURL(file);
+  };
 
   const generate = async () => {
     if (!prompt.trim()) {
@@ -67,13 +141,30 @@ function VideoStudio() {
     toast.success("Generating video…", { description: "This can take a few minutes." });
     try {
       const seconds = Number(duration.replace("s", "")) || 6;
+      const frameRate = Number(fps.replace(" fps", "")) || 24;
+      const nextSeed = seedLock ? seed : Math.floor(Math.random() * 999999);
+      if (!seedLock) setSeed(nextSeed);
+
+      const [startUrl, endUrl] = await Promise.all(
+        (["start", "end"] as FrameSlot[]).map(async (slot) => {
+          const f = frames[slot];
+          if (!f) return undefined;
+          const up = await uploadReference({ data: { dataUrl: f.dataUrl } });
+          return up.url ?? undefined;
+        }),
+      );
+
       const job = await startVideo({
         data: {
-          prompt: `${prompt.trim()}, ${style.toLowerCase()} look, ${camera.toLowerCase()} camera move`,
+          prompt: `${prompt.trim()}, ${style.toLowerCase()} look (${styleStrength}% style), ${camera.toLowerCase()} camera move, ${motion > 65 ? "high" : motion < 35 ? "subtle" : "moderate"} motion`,
           negative: negative.trim(),
           aspect: ratio,
-          frames: Math.round(seconds * 24),
-          frameRate: Number(fps.replace(" fps", "")) || 24,
+          resolution: res,
+          frames: Math.round(seconds * frameRate),
+          frameRate,
+          seed: nextSeed,
+          ...(startUrl ? { imageUrl: startUrl } : {}),
+          ...(endUrl ? { endImageUrl: endUrl } : {}),
         },
       });
       for (let i = 0; i < 120; i += 1) {
@@ -94,6 +185,11 @@ function VideoStudio() {
       setBusy(false);
     }
   };
+
+  const refSummary =
+    [frames.start ? "Start frame" : null, frames.end ? "End frame" : null]
+      .filter(Boolean)
+      .join(" · ") || "None";
 
   return (
     <StudioLayout>
@@ -121,7 +217,7 @@ function VideoStudio() {
           <Segment options={models} value={model} onChange={setModel} />
         </Panel>
 
-        <Panel title="Format" summary={`${ratio} · ${res} · ${duration} · ${fps}`}>
+        <Panel title="Format" summary={`${ratio} · ${res} · ${duration} · ${fps}`} defaultOpen>
           <RatioBlocks label="Aspect ratio" options={ratios} value={ratio} onChange={setRatio} />
           <Segment label="Resolution" options={resolutions} value={res} onChange={setRes} />
           <Segment label="Duration" options={durations} value={duration} onChange={setDuration} />
@@ -138,18 +234,30 @@ function VideoStudio() {
           <SliderRow label="Style strength" value={styleStrength} onChange={setStyleStrength} suffix="%" />
         </Panel>
 
-        <Panel title="References" summary={modes.join(", ") || "None"}>
-          <Chips
-            options={refModes}
-            values={modes}
-            onToggle={(v) => setModes((m) => (m.includes(v) ? m.filter((x) => x !== v) : [...m, v]))}
+        <Panel title="Frame references" summary={refSummary}>
+          <FrameUpload
+            label="Start frame"
+            note="Animates from this image (image to video)."
+            file={frames.start}
+            onPick={(f) => pickFrame("start", f)}
+            onClear={() => setFrames((s) => ({ ...s, start: null }))}
+          />
+          <FrameUpload
+            label="End frame"
+            note="Optional target frame the clip transitions into."
+            file={frames.end}
+            onPick={(f) => pickFrame("end", f)}
+            onClear={() => setFrames((s) => ({ ...s, end: null }))}
           />
         </Panel>
 
-        <Panel title="Output" summary={`${count} clip${count === 1 ? "" : "s"}${audio ? " · soundtrack" : ""}`}>
-          <SliderRow label="Variations" value={count} onChange={setCount} min={1} max={4} />
-          <SwitchRow label="Generate soundtrack" checked={audio} onCheckedChange={setAudio} />
-          <SwitchRow label="Lock seed" checked={seedLock} onCheckedChange={setSeedLock} />
+        <Panel title="Output" summary={seedLock ? `Seed #${seed}` : "Random seed"}>
+          <SwitchRow
+            label="Lock seed"
+            desc={`Reuse seed #${seed} for repeatable results`}
+            checked={seedLock}
+            onCheckedChange={setSeedLock}
+          />
         </Panel>
 
         <button
