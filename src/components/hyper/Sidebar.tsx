@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 type Item = { label: string; icon: typeof Home; badge?: string; to?: string };
 
 const primary: Item[] = [
-  { label: "Home", icon: Home, to: "/" },
+  { label: "Home", icon: Home, to: "/dashboard" },
   { label: "Explore", icon: Compass },
 ];
 
