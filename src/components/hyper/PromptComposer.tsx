@@ -273,12 +273,24 @@ export function PromptComposer() {
           isFinal: false,
           kind: "audio",
           model: model.name,
-          ratioLabel: "Speech",
-          styleName: style.name,
+          ratioLabel: audioMode === "speech" ? `Speech · ${voice}` : "Music",
+          styleName: audioMode === "speech" ? tone : "Music",
         };
         setResults((r) => [ph, ...r]);
-        toast.success("Generating speech…");
-        const res = await generateSpeech({ data: { text: prompt } });
+        toast.success(audioMode === "speech" ? "Generating speech…" : "Composing music…");
+        const res =
+          audioMode === "speech"
+            ? await generateSpeech({
+                data: { text: prompt, voice, model: model.id, tone, pace: pace[0] ?? 100 },
+              })
+            : await generateMusic({
+                data: {
+                  prompt,
+                  tempo: musicTempo[0] ?? 120,
+                  seconds: musicSeconds[0] ?? 30,
+                  instrumental,
+                },
+              });
         setResults((list) =>
           list.map((r) => (r.id === ph.id ? { ...r, dataUrl: res.url ?? "", isFinal: true } : r)),
         );
@@ -293,7 +305,7 @@ export function PromptComposer() {
           isFinal: false,
           kind: "video",
           model: model.name,
-          ratioLabel: ratio.label,
+          ratioLabel: `${ratio.label} · ${videoRes} · ${videoDuration}s`,
           styleName: style.name,
         };
         setResults((r) => [ph, ...r]);
@@ -303,10 +315,16 @@ export function PromptComposer() {
           data: {
             prompt: promptWithStyle(prompt),
             aspect: ratio.label,
+            resolution: videoRes,
+            frames: Math.round(videoDuration * videoFps),
+            frameRate: videoFps,
+            negative: videoNegative.trim(),
             seed: nextSeed,
             ...(urls[0] ? { imageUrl: urls[0] } : {}),
+            ...(urls[1] ? { endImageUrl: urls[1] } : {}),
           },
         });
+
         for (let attempt = 0; attempt < 120; attempt += 1) {
           await new Promise((res) => setTimeout(res, 5000));
           const status = await pollVideo({ data: { id: job.id, requestId: job.requestId } });
