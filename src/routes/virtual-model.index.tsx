@@ -182,8 +182,14 @@ function VirtualModelStudio() {
           type="button"
           disabled={render.isPending}
           onClick={() => {
-            if (!model) return toast.error("Select a model first.");
-            if (!prompt.trim()) return toast.error("Describe the shot first.");
+            if (!model) {
+              toast.error("Select a model first.");
+              return;
+            }
+            if (!prompt.trim()) {
+              toast.error("Describe the shot first.");
+              return;
+            }
             render.mutate();
           }}
           className="w-full rounded-full bg-primary py-3 text-[14px] font-bold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"

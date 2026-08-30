@@ -135,7 +135,10 @@ function CreateModel() {
           type="button"
           disabled={create.isPending}
           onClick={() => {
-            if (!name.trim()) return toast.error("Give your model a name first.");
+            if (!name.trim()) {
+              toast.error("Give your model a name first.");
+              return;
+            }
             toast.info("Generating the six-view character profile…", {
               description: "This takes a minute.",
             });

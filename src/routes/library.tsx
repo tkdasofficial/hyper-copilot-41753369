@@ -171,7 +171,10 @@ function LibraryPage() {
                       <button
                         type="button"
                         onClick={() => {
-                          if (!a.src) return toast.error("This asset has no file yet.");
+                          if (!a.src) {
+                            toast.error("This asset has no file yet.");
+                            return;
+                          }
                           window.open(a.src, "_blank", "noopener");
                         }}
                         className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11.5px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
