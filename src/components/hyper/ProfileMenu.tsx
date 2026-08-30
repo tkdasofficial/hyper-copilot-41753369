@@ -54,7 +54,7 @@ export function ProfileMenu() {
         <DropdownMenuSeparator />
         <DropdownMenuItem className="cursor-pointer rounded-lg text-[13px] font-medium">
           <LogOut className="h-4 w-4" strokeWidth={1.8} />
-          Sign out
+          {user ? "Sign out" : "Sign in"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
