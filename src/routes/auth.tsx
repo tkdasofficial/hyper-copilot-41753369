@@ -108,6 +108,13 @@ function AuthPage() {
     setBusy(false);
 
     if (error) {
+      // The email lookup may be unavailable; recover by switching to sign in.
+      if (/already\s*registered|already\s*exists|User already/i.test(error.message)) {
+        setStep("login");
+        setPassword("");
+        toast.info("You already have an account. Enter your password to sign in.");
+        return;
+      }
       toast.error(error.message);
       return;
     }
