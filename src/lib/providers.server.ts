@@ -174,25 +174,46 @@ export async function pixazoImage(input: {
 export async function pixazoStartVideo(input: {
   prompt: string;
   imageUrl?: string | undefined;
+  endImageUrl?: string | undefined;
   negative?: string | undefined;
   aspect?: string | undefined;
   seed?: number | undefined;
   frames?: number | undefined;
   frameRate?: number | undefined;
+  width?: number | undefined;
+  height?: number | undefined;
 }): Promise<string> {
   const path = input.imageUrl ? "/ltx-video/v1/image-to-video" : "/ltx-video/v1/text-to-video";
-  const data = await pixazoPost<{ request_id?: string }>(path, {
+  const body = {
     prompt: input.prompt,
     ...(input.imageUrl ? { image_url: input.imageUrl } : {}),
+    ...(input.endImageUrl ? { end_image_url: input.endImageUrl } : {}),
     ...(input.negative ? { negative: input.negative } : {}),
     ...(input.aspect ? { aspect: input.aspect } : {}),
     ...(input.seed === undefined ? {} : { seed: input.seed }),
     ...(input.frames ? { num_frames: input.frames } : {}),
     ...(input.frameRate ? { frame_rate: input.frameRate } : {}),
-  });
+    ...(input.width && input.height ? { width: input.width, height: input.height } : {}),
+  };
+  let data: { request_id?: string };
+  try {
+    data = await pixazoPost<{ request_id?: string }>(path, body);
+  } catch (err) {
+    // Some deployments reject the optional sizing/end-frame fields; retry minimal.
+    const minimal = {
+      prompt: input.prompt,
+      ...(input.imageUrl ? { image_url: input.imageUrl } : {}),
+      ...(input.negative ? { negative: input.negative } : {}),
+      ...(input.frames ? { num_frames: input.frames } : {}),
+      ...(input.frameRate ? { frame_rate: input.frameRate } : {}),
+    };
+    if (JSON.stringify(minimal) === JSON.stringify(body)) throw err;
+    data = await pixazoPost<{ request_id?: string }>(path, minimal);
+  }
   if (!data.request_id) throw new Error("Video provider returned no job id");
   return data.request_id;
 }
+
 
 export type VideoJob = { status: string; url?: string | undefined; error?: string | undefined };
 
