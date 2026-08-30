@@ -22,12 +22,22 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import {
   generateImage,
+  generateMusic,
   generateSpeech,
   pollVideo,
   startVideo,
   uploadReference,
 } from "@/lib/generation.functions";
+import {
+  SPEECH_TONES,
+  TTS_MODELS,
+  VIDEO_DURATIONS,
+  VIDEO_FPS,
+  VIDEO_RESOLUTIONS,
+  VOICES,
+} from "@/lib/media.shared";
 import { ResultsGrid, type GenResult } from "./ResultsGrid";
+
 
 const modalities = [
   { label: "Image", icon: ImageIcon },
