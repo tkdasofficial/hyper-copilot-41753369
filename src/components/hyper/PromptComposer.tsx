@@ -202,7 +202,21 @@ export function PromptComposer() {
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 999999));
   const [results, setResults] = useState<GenResult[]>([]);
   const [generating, setGenerating] = useState(false);
+  // Video settings
+  const [videoDuration, setVideoDuration] = useState<number>(VIDEO_DURATIONS[2] ?? 8);
+  const [videoFps, setVideoFps] = useState<number>(VIDEO_FPS[0] ?? 24);
+  const [videoRes, setVideoRes] = useState<string>(VIDEO_RESOLUTIONS[1] ?? "720p");
+  const [videoNegative, setVideoNegative] = useState("");
+  // Audio settings
+  const [audioMode, setAudioMode] = useState<"speech" | "music">("speech");
+  const [voice, setVoice] = useState<string>(VOICES[0].id);
+  const [tone, setTone] = useState<string>(SPEECH_TONES[0]);
+  const [pace, setPace] = useState([100]);
+  const [musicTempo, setMusicTempo] = useState([120]);
+  const [musicSeconds, setMusicSeconds] = useState([30]);
+  const [instrumental, setInstrumental] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
+
 
   const toggleMode = (id: string) =>
     setModes((m) => (m.includes(id) ? m.filter((x) => x !== id) : [...m, id]));
