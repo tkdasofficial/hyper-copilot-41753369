@@ -114,6 +114,7 @@ export function TopBar() {
               onNavigate={() => setMenuOpen(false)}
               disabled={!i.to}
             />
+          ))}
           <p className="px-3 pb-1.5 pt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
             My Work
           </p>
