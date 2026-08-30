@@ -262,18 +262,22 @@ export const pollVideo = createServerFn({ method: "POST" })
     return { status: "running" as const };
   });
 
-/** Hyper Audio Omni — text to speech. */
+/** Hyper Audio Omni — text to speech, with voice / model / tone controls. */
 export const generateSpeech = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((input: { text: string; voice?: string }) => input)
+  .inputValidator(
+    (input: { text: string; voice?: string; model?: string; tone?: string; pace?: number }) => input,
+  )
   .handler(async ({ data, context }) => {
     const providers = await import("@/lib/providers.server");
     const storage = await import("@/lib/storage.server");
+    const { styledSpeechText } = await import("@/lib/media.shared");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { bytes, contentType } = await providers.lovableSpeech({
-      text: data.text,
+      text: styledSpeechText(data.text, data.tone, data.pace),
       voice: data.voice,
+      model: data.model,
     });
     const path = await storage.uploadBytes(
       storage.GENERATIONS_BUCKET,
@@ -290,13 +294,99 @@ export const generateSpeech = createServerFn({ method: "POST" })
         prompt: data.text,
         status: "completed",
         storage_path: path,
-        params: { voice: data.voice ?? "Kore" },
+        params: {
+          mode: "speech",
+          voice: data.voice ?? "Kore",
+          ttsModel: data.model ?? null,
+          tone: data.tone ?? null,
+          pace: data.pace ?? null,
+        },
       })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
     return { id: row.id, url: await storage.signedUrl(storage.GENERATIONS_BUCKET, path) };
   });
+
+/**
+ * Hyper Audio Omni — text to music. Routed to the AI gateway music endpoint;
+ * the call surfaces a clear message while no music model is enabled for the
+ * workspace, so the UI never fails silently.
+ */
+export const generateMusic = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator(
+    (input: {
+      prompt: string;
+      genre?: string;
+      mood?: string;
+      tempo?: number;
+      seconds?: number;
+      instrumental?: boolean;
+    }) => input,
+  )
+  .handler(async ({ data, context }) => {
+    const providers = await import("@/lib/providers.server");
+    const storage = await import("@/lib/storage.server");
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const brief = [
+      data.prompt,
+      data.genre ? `${data.genre} genre` : "",
+      data.mood ? `${data.mood} mood` : "",
+      data.tempo ? `${data.tempo} BPM` : "",
+      data.instrumental ? "instrumental only" : "",
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+    try {
+      const { bytes, contentType } = await providers.lovableMusic({
+        prompt: brief,
+        seconds: data.seconds,
+      });
+      const path = await storage.uploadBytes(
+        storage.GENERATIONS_BUCKET,
+        context.userId,
+        bytes,
+        contentType,
+      );
+      const { data: row, error } = await supabaseAdmin
+        .from("generations")
+        .insert({
+          user_id: context.userId,
+          kind: "audio",
+          model: "hyper-audio-omni",
+          prompt: brief,
+          status: "completed",
+          storage_path: path,
+          params: {
+            mode: "music",
+            genre: data.genre ?? null,
+            mood: data.mood ?? null,
+            tempo: data.tempo ?? null,
+            seconds: data.seconds ?? null,
+          },
+        })
+        .select("id")
+        .single();
+      if (error) throw new Error(error.message);
+      return { id: row.id, url: await storage.signedUrl(storage.GENERATIONS_BUCKET, path) };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Music generation failed";
+      await supabaseAdmin.from("generations").insert({
+        user_id: context.userId,
+        kind: "audio",
+        model: "hyper-audio-omni",
+        prompt: brief,
+        status: "failed",
+        error: message,
+        params: { mode: "music" },
+      });
+      throw new Error(message);
+    }
+  });
+
 
 /** The signed-in user's generations, newest first, with fresh signed URLs. */
 export const listGenerations = createServerFn({ method: "POST" })
