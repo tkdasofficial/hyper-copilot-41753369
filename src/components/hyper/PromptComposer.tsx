@@ -185,7 +185,9 @@ export function PromptComposer() {
   const [style, setStyle] = useState(styles[0]!);
   const [styleStrength, setStyleStrength] = useState([65]);
   const [modes, setModes] = useState<string[]>([]);
-  const [refs, setRefs] = useState<{ id: string; name: string; url: string }[]>([]);
+  const [refs, setRefs] = useState<
+    { id: string; name: string; url: string; dataUrl?: string }[]
+  >([]);
   const [count, setCount] = useState([4]);
   const [seedLocked, setSeedLocked] = useState(false);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 999999));
