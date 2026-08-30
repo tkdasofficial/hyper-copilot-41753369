@@ -90,32 +90,32 @@ function Landing() {
 
   return (
     <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background">
-      <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 lg:px-8">
+      <header className="sticky top-0 z-40 border-b border-border bg-background/75 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between gap-3 px-4 lg:px-8">
           <Logo />
-          <nav className="flex items-center gap-2">
+          <nav className="flex items-center gap-1.5 sm:gap-2">
             <Link
               to="/pricing"
               className="hidden rounded-full px-3 py-2 text-[13px] font-semibold text-muted-foreground transition-colors hover:text-foreground sm:block"
             >
               Pricing
             </Link>
-            <ThemeToggle />
             <Link
               to="/auth"
-              className="rounded-full border border-border px-3.5 py-2 text-[13px] font-bold transition-colors hover:border-border-strong"
+              className="rounded-full px-3 py-2 text-[13px] font-bold text-muted-foreground transition-colors hover:text-foreground"
             >
               Log in
             </Link>
             <Link
               to="/auth"
-              className="rounded-full bg-primary px-3.5 py-2 text-[13px] font-bold text-primary-foreground transition-opacity hover:opacity-90"
+              className="rounded-full bg-foreground px-3.5 py-2 text-[13px] font-bold text-background transition-opacity hover:opacity-90"
             >
               Get started
             </Link>
           </nav>
         </div>
       </header>
+
 
       <main className="mx-auto max-w-6xl px-4 pb-24 lg:px-8">
         <section className="relative pt-16 text-center sm:pt-24">
