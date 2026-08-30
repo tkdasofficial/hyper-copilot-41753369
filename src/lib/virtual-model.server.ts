@@ -94,7 +94,7 @@ export async function renderCharacterImage(
     : null;
   const { width, height } = sizeForAspect(input.aspect ?? "4:5");
 
-  const providerUrl = await pixazoStableDiffusion({
+  const providerUrl = await pixazoImage({
     prompt: `${input.identityPrompt}. ${input.prompt}. Keep the exact same face, bone structure and body proportions as the reference person, photorealistic, ultra detailed`,
     negativePrompt: input.negativePrompt || IDENTITY_NEGATIVE,
     imageUrl: reference ?? undefined,
