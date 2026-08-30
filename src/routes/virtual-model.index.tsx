@@ -44,18 +44,11 @@ const lighting = ["Softbox", "Golden hour", "Rembrandt", "Ring", "Neon", "Flash"
 const shots = ["Portrait", "Half body", "Full body", "Close-up", "Wide"] as const;
 const lenses = ["24mm", "35mm", "50mm", "85mm", "135mm"] as const;
 
-const seedModels: VirtualModel[] = [
-  { id: "m1", name: "Aya", meta: "24 · Realistic", seedHue: 210 },
-  { id: "m2", name: "Lena", meta: "27 · Editorial", seedHue: 350 },
-  { id: "m3", name: "Zoe", meta: "22 · HEAVEN", seedHue: 265 },
-  { id: "m4", name: "Kai", meta: "29 · Cinematic", seedHue: 30 },
-  { id: "m5", name: "Mira", meta: "25 · Realistic", seedHue: 160 },
-];
-
 function VirtualModelStudio() {
   const navigate = useNavigate();
-  const [models] = useState<VirtualModel[]>(seedModels);
-  const [selected, setSelected] = useState<string | null>(seedModels[0]!.id);
+  // TODO: load the signed-in user's saved virtual models from the backend.
+  const [models] = useState<VirtualModel[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
 
   const [prompt, setPrompt] = useState("");
   const [negative, setNegative] = useState("");
