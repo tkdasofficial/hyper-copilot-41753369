@@ -134,6 +134,23 @@ function CreateModel() {
           />
         </Panel>
 
+        <Panel title="Consistency" summary={`${consistency}% identity lock`}>
+          <SliderRow
+            label="Identity lock"
+            value={consistency}
+            onChange={setConsistency}
+            min={40}
+            max={100}
+            suffix="%"
+          />
+          <p className="pt-1 text-[11px] leading-relaxed text-muted-foreground">
+            Higher values hold the face and body structure tighter across all six views and every
+            later render. Lower values allow more variation between shots.
+          </p>
+        </Panel>
+
+
+
         <button
           type="button"
           disabled={create.isPending}
