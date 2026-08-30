@@ -1,10 +1,13 @@
 import { useMemo, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { Download, Search, Trash2, ImageIcon, Video, AudioLines, PenTool } from "lucide-react";
 import { StudioLayout } from "@/components/hyper/StudioLayout";
 import { cn } from "@/lib/utils";
-import { libraryAssets, type AssetKind, type LibraryAsset } from "@/lib/content";
+import { deleteGeneration, listGenerations } from "@/lib/generation.functions";
+
+type AssetKind = "Image" | "Video" | "Audio" | "Vector";
 
 export const Route = createFileRoute("/library")({
   head: () => ({
@@ -37,7 +40,32 @@ const kindIcon: Record<AssetKind, typeof ImageIcon> = {
 const filters = ["All", "Image", "Video", "Audio", "Vector"] as const;
 
 function LibraryPage() {
-  const [assets, setAssets] = useState<LibraryAsset[]>(libraryAssets);
+  const queryClient = useQueryClient();
+  const { data } = useQuery({
+    queryKey: ["generations", "library"],
+    queryFn: () => listGenerations({ data: { limit: 200 } }),
+  });
+  const assets = useMemo(
+    () =>
+      (data ?? []).map((g) => ({
+        id: g.id,
+        kind: (g.kind === "video" ? "Video" : g.kind === "audio" ? "Audio" : "Image") as AssetKind,
+        prompt: g.prompt,
+        src: g.url,
+        meta: g.model,
+        date: new Date(g.createdAt).toLocaleDateString(),
+        status: g.status,
+      })),
+    [data],
+  );
+  const remove = useMutation({
+    mutationFn: (id: string) => deleteGeneration({ data: { id } }),
+    onSuccess: () => {
+      toast("Asset deleted");
+      void queryClient.invalidateQueries({ queryKey: ["generations"] });
+    },
+    onError: (err) => toast.error(err instanceof Error ? err.message : "Could not delete"),
+  });
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
   const [query, setQuery] = useState("");
 
@@ -110,12 +138,20 @@ function LibraryPage() {
                 >
                   <div className="relative aspect-square bg-surface-2">
                     {a.src ? (
+                      a.kind === "Video" ? (
+                        <video src={a.src} controls playsInline className="h-full w-full object-cover" />
+                      ) : a.kind === "Audio" ? (
+                        <div className="grid h-full w-full place-items-center p-3">
+                          <audio src={a.src} controls className="w-full" />
+                        </div>
+                      ) : (
                       <img
                         src={a.src}
-                        alt={a.alt ?? a.prompt}
+                        alt={a.prompt}
                         loading="lazy"
                         className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
                       />
+                      )
                     ) : (
                       <div className="grid h-full w-full place-items-center text-muted-foreground">
                         <Icon className="h-8 w-8" strokeWidth={1.6} />
@@ -134,7 +170,13 @@ function LibraryPage() {
                     <div className="flex items-center gap-1.5 pt-0.5">
                       <button
                         type="button"
-                        onClick={() => toast("Download started", { description: a.prompt })}
+                        onClick={() => {
+                          if (!a.src) {
+                            toast.error("This asset has no file yet.");
+                            return;
+                          }
+                          window.open(a.src, "_blank", "noopener");
+                        }}
                         className="flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[11.5px] font-semibold text-muted-foreground transition-colors hover:text-foreground"
                       >
                         <Download className="h-3.5 w-3.5" strokeWidth={2} />
@@ -143,10 +185,7 @@ function LibraryPage() {
                       <button
                         type="button"
                         aria-label="Delete asset"
-                        onClick={() => {
-                          setAssets((prev) => prev.filter((x) => x.id !== a.id));
-                          toast("Asset deleted");
-                        }}
+                        onClick={() => remove.mutate(a.id)}
                         className="ml-auto grid h-7 w-7 place-items-center rounded-full border border-border text-muted-foreground transition-colors hover:text-destructive"
                       >
                         <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />

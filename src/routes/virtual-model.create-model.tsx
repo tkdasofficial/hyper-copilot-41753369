@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { StudioLayout } from "@/components/hyper/StudioLayout";
 import { Chips, Panel, Segment, SliderRow, TextRow } from "@/components/hyper/StudioControls";
+import { createVirtualModel } from "@/lib/virtual-model.functions";
 
 export const Route = createFileRoute("/virtual-model/create-model")({
   head: () => ({
@@ -50,6 +52,42 @@ function CreateModel() {
   const [ethnicity, setEthnicity] = useState<(typeof ethnicities)[number]>(ethnicities[0]);
   const [traits, setTraits] = useState<string[]>([]);
   const [persona, setPersona] = useState("");
+  const queryClient = useQueryClient();
+
+  const identityPrompt = () =>
+    [
+      `${styleMode.toLowerCase()} portrait of a ${age} year old ${gender.toLowerCase()} fashion model`,
+      `${ethnicity.toLowerCase()} features`,
+      `Fitzpatrick skin tone ${skin}`,
+      `${eye.toLowerCase()} eyes`,
+      `${hairColor.toLowerCase()} ${hair.toLowerCase()} hair`,
+      `${body.toLowerCase()} build`,
+      `${height} cm tall`,
+      traits.length ? traits.join(", ").toLowerCase() : "",
+      persona.trim(),
+    ]
+      .filter(Boolean)
+      .join(", ");
+
+  const create = useMutation({
+    mutationFn: () =>
+      createVirtualModel({
+        data: {
+          name: name.trim() || "New model",
+          description: `${gender} · ${age} · ${height}cm · ${body} · ${styleMode}`,
+          identityPrompt: identityPrompt(),
+        },
+      }),
+    onSuccess: () => {
+      toast.success(`${name.trim() || "New model"} created`, {
+        description: "Six profile views generated.",
+      });
+      void queryClient.invalidateQueries({ queryKey: ["virtual-models"] });
+      void navigate({ to: "/virtual-model" });
+    },
+    onError: (err) =>
+      toast.error(err instanceof Error ? err.message : "Could not create the model"),
+  });
 
   return (
     <StudioLayout>
@@ -95,16 +133,20 @@ function CreateModel() {
 
         <button
           type="button"
+          disabled={create.isPending}
           onClick={() => {
-            const label = name.trim() || "New model";
-            toast.success(`${label} created`, {
-              description: `${gender} · ${age} · ${height}cm · ${body} · ${styleMode}`,
+            if (!name.trim()) {
+              toast.error("Give your model a name first.");
+              return;
+            }
+            toast.info("Generating the six-view character profile…", {
+              description: "This takes a minute.",
             });
-            navigate({ to: "/virtual-model" });
+            create.mutate();
           }}
-          className="w-full rounded-full bg-primary py-2.5 text-[13px] font-bold text-primary-foreground transition-opacity hover:opacity-90"
+          className="w-full rounded-full bg-primary py-2.5 text-[13px] font-bold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          Create model
+          {create.isPending ? "Creating…" : "Create model"}
         </button>
       </div>
     </StudioLayout>

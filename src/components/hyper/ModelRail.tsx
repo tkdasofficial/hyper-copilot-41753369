@@ -1,11 +1,12 @@
-import { Check, Plus, User } from "lucide-react";
+import { Check, Loader2, Plus, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type VirtualModel = {
   id: string;
   name: string;
   meta: string;
-  seedHue: number;
+  headshotUrl?: string | null;
+  status?: string;
 };
 
 export function ModelRail({
@@ -34,15 +35,22 @@ export function ModelRail({
               on ? "border-primary" : "border-border hover:border-border-strong",
             )}
           >
-            <div
-              aria-hidden
-              className="grid h-full w-full place-items-center"
-              style={{
-                background: `linear-gradient(140deg, hsl(${m.seedHue} 70% 22%), hsl(${(m.seedHue + 40) % 360} 60% 12%))`,
-              }}
-            >
-              <User className="h-7 w-7 text-white/70" strokeWidth={1.4} />
-            </div>
+            {m.headshotUrl ? (
+              <img
+                src={m.headshotUrl}
+                alt={m.name}
+                loading="lazy"
+                className="h-full w-full object-cover"
+              />
+            ) : (
+              <div className="grid h-full w-full place-items-center bg-muted/40">
+                {m.status === "running" ? (
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" strokeWidth={1.6} />
+                ) : (
+                  <User className="h-7 w-7 text-muted-foreground" strokeWidth={1.4} />
+                )}
+              </div>
+            )}
             <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pb-1.5 pt-5">
               <p className="truncate text-[11px] font-bold text-white">{m.name}</p>
             </div>
