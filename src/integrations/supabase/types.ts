@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      generations: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          kind: string
+          model: string
+          params: Json
+          prompt: string
+          status: string
+          storage_path: string | null
+          thumb_path: string | null
+          updated_at: string
+          user_id: string
+          virtual_model_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind: string
+          model: string
+          params?: Json
+          prompt?: string
+          status?: string
+          storage_path?: string | null
+          thumb_path?: string | null
+          updated_at?: string
+          user_id: string
+          virtual_model_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          kind?: string
+          model?: string
+          params?: Json
+          prompt?: string
+          status?: string
+          storage_path?: string | null
+          thumb_path?: string | null
+          updated_at?: string
+          user_id?: string
+          virtual_model_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "generations_virtual_model_id_fkey"
+            columns: ["virtual_model_id"]
+            isOneToOne: false
+            referencedRelation: "virtual_models"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -44,6 +100,51 @@ export type Database = {
           purpose?: string | null
           role?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      virtual_models: {
+        Row: {
+          created_at: string
+          description: string
+          error: string | null
+          headshot_path: string | null
+          id: string
+          identity_prompt: string
+          images: Json
+          name: string
+          seed: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string
+          error?: string | null
+          headshot_path?: string | null
+          id?: string
+          identity_prompt?: string
+          images?: Json
+          name: string
+          seed?: number
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          error?: string | null
+          headshot_path?: string | null
+          id?: string
+          identity_prompt?: string
+          images?: Json
+          name?: string
+          seed?: number
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
