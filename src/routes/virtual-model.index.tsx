@@ -96,18 +96,24 @@ function VirtualModelStudio() {
 
   const render = useMutation({
     mutationFn: async () => {
-      const runs = Array.from({ length: count }, () =>
+      const runs = Array.from({ length: count }, (_, i) =>
         generateWithVirtualModel({
           data: {
             modelId: selected!,
             prompt: scenePrompt(),
             negativePrompt: negative.trim(),
             aspect: ratio,
+            shot,
+            consistency,
+            detail,
+            faceLock,
+            variation: i,
           },
         }),
       );
       return Promise.all(runs);
     },
+
     onSuccess: () => {
       toast.success(`Generated ${count} render${count === 1 ? "" : "s"}`);
       void queryClient.invalidateQueries({ queryKey: ["generations"] });
