@@ -71,18 +71,27 @@ export const deleteVirtualModel = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-/** Generates a new image of an existing character, conditioned on its headshot. */
+/** Generates a new image of an existing character, conditioned on its profile set. */
 export const generateWithVirtualModel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (input: { modelId: string; prompt: string; negativePrompt?: string; aspect?: string }) =>
-      input,
+    (input: {
+      modelId: string;
+      prompt: string;
+      negativePrompt?: string;
+      aspect?: string;
+      shot?: string;
+      consistency?: number;
+      detail?: number;
+      faceLock?: boolean;
+      variation?: number;
+    }) => input,
   )
   .handler(async ({ data, context }) => {
     const { renderCharacterImage } = await import("@/lib/virtual-model.server");
     const { data: model, error } = await context.supabase
       .from("virtual_models")
-      .select("id, identity_prompt, seed, headshot_path")
+      .select("id, identity_prompt, seed, headshot_path, images")
       .eq("id", data.modelId)
       .single();
     if (error) throw new Error(error.message);
@@ -92,8 +101,15 @@ export const generateWithVirtualModel = createServerFn({ method: "POST" })
       identityPrompt: model.identity_prompt,
       seed: Number(model.seed),
       headshotPath: model.headshot_path,
+      images: (model.images as VirtualModelImage[] | null) ?? [],
       prompt: data.prompt,
       ...(data.negativePrompt === undefined ? {} : { negativePrompt: data.negativePrompt }),
       ...(data.aspect === undefined ? {} : { aspect: data.aspect }),
+      ...(data.shot === undefined ? {} : { shot: data.shot }),
+      ...(data.consistency === undefined ? {} : { consistency: data.consistency }),
+      ...(data.detail === undefined ? {} : { detail: data.detail }),
+      ...(data.faceLock === undefined ? {} : { faceLock: data.faceLock }),
+      ...(data.variation === undefined ? {} : { variation: data.variation }),
     });
   });
+
