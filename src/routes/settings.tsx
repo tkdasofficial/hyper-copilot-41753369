@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { account } from "@/lib/content";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { Sidebar } from "@/components/hyper/Sidebar";
 import { TopBar } from "@/components/hyper/TopBar";
@@ -82,15 +83,17 @@ function SettingsPage() {
             <dl className="mt-3 divide-y divide-border text-[13px]">
               <div className="flex items-center justify-between py-2.5">
                 <dt className="text-muted-foreground">Name</dt>
-                <dd className="font-semibold">TK Das</dd>
+                <dd className="font-semibold">{account?.name ?? "—"}</dd>
               </div>
               <div className="flex items-center justify-between py-2.5">
                 <dt className="text-muted-foreground">Plan</dt>
-                <dd className="font-semibold">Hyper Pro trial</dd>
+                <dd className="font-semibold">{account?.plan ?? "—"}</dd>
               </div>
               <div className="flex items-center justify-between py-2.5">
                 <dt className="text-muted-foreground">Credits</dt>
-                <dd className="font-semibold">1,280</dd>
+                <dd className="font-semibold">
+                  {account ? account.credits.toLocaleString() : "—"}
+                </dd>
               </div>
             </dl>
           </section>

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { account } from "@/lib/content";
 import {
   Crown,
   Search,
@@ -182,7 +183,7 @@ export function TopBar() {
         <div className="ml-auto flex items-center gap-2 lg:ml-0">
           <span className="hidden items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-[12px] font-semibold sm:flex">
             <Zap className="h-3.5 w-3.5 text-spectral-1" strokeWidth={2.2} />
-            1,280
+            {account ? account.credits.toLocaleString() : "—"}
             <span className="text-muted-foreground">credits</span>
           </span>
           <Link

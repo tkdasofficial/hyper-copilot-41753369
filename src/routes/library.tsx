@@ -4,10 +4,7 @@ import { toast } from "sonner";
 import { Download, Search, Trash2, ImageIcon, Video, AudioLines, PenTool } from "lucide-react";
 import { StudioLayout } from "@/components/hyper/StudioLayout";
 import { cn } from "@/lib/utils";
-import g1 from "@/assets/gallery-1.jpg";
-import g2 from "@/assets/gallery-2.jpg";
-import g3 from "@/assets/gallery-3.jpg";
-import g4 from "@/assets/gallery-4.jpg";
+import { libraryAssets, type AssetKind, type LibraryAsset } from "@/lib/content";
 
 export const Route = createFileRoute("/library")({
   head: () => ({
@@ -30,82 +27,17 @@ export const Route = createFileRoute("/library")({
   component: LibraryPage,
 });
 
-type Kind = "Image" | "Video" | "Audio" | "Vector";
-
-type Asset = {
-  id: string;
-  kind: Kind;
-  src?: string;
-  alt?: string;
-  prompt: string;
-  meta: string;
-  date: string;
-};
-
-const kindIcon: Record<Kind, typeof ImageIcon> = {
+const kindIcon: Record<AssetKind, typeof ImageIcon> = {
   Image: ImageIcon,
   Video: Video,
   Audio: AudioLines,
   Vector: PenTool,
 };
 
-const initialAssets: Asset[] = [
-  {
-    id: "a1",
-    kind: "Image",
-    src: g1,
-    alt: "Iridescent chrome orchid on a dark background",
-    prompt: "chrome liquid-metal orchid blooming in zero gravity, iridescent light",
-    meta: "Hyper Image Flash · 4:5",
-    date: "Today",
-  },
-  {
-    id: "a2",
-    kind: "Image",
-    src: g2,
-    alt: "Curved concrete pavilion in a desert at sunset",
-    prompt: "curved concrete pavilion at dusk in the desert, warm amber spill",
-    meta: "Hyper Image Flash · 3:2",
-    date: "Today",
-  },
-  {
-    id: "a3",
-    kind: "Image",
-    src: g3,
-    alt: "Portrait of an astronaut with neon-lit visor",
-    prompt: "astronaut-explorer with holographic visor reflecting a neon city",
-    meta: "Hyper Image Quality · 2:3",
-    date: "Yesterday",
-  },
-  {
-    id: "a4",
-    kind: "Vector",
-    src: g4,
-    alt: "Abstract translucent glass ribbons in violet and coral",
-    prompt: "translucent glass ribbons in coral and violet, soft caustics",
-    meta: "Hyper Vector · SVG",
-    date: "Yesterday",
-  },
-  {
-    id: "a5",
-    kind: "Video",
-    prompt: "slow dolly through a rain-soaked neon alley, cinematic grade",
-    meta: "Hyper Video Omni · 8s · 16:9",
-    date: "2 days ago",
-  },
-  {
-    id: "a6",
-    kind: "Audio",
-    prompt: "epic orchestral cue with rising strings and taiko drums",
-    meta: "Hyper Audio Omni · 60s · WAV",
-    date: "3 days ago",
-  },
-];
-
 const filters = ["All", "Image", "Video", "Audio", "Vector"] as const;
 
 function LibraryPage() {
-  const [assets, setAssets] = useState(initialAssets);
+  const [assets, setAssets] = useState<LibraryAsset[]>(libraryAssets);
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
   const [query, setQuery] = useState("");
 
@@ -158,9 +90,13 @@ function LibraryPage() {
 
         {visible.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border bg-surface/40 p-10 text-center">
-            <p className="text-[14px] font-semibold">No assets found</p>
+            <p className="text-[14px] font-semibold">
+              {assets.length === 0 ? "Your library is empty" : "No assets found"}
+            </p>
             <p className="mt-1 text-[12.5px] text-muted-foreground">
-              Try a different search or filter, or generate something new.
+              {assets.length === 0
+                ? "Everything you generate will be saved here."
+                : "Try a different search or filter, or generate something new."}
             </p>
           </div>
         ) : (
