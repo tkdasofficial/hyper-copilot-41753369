@@ -298,3 +298,38 @@ export async function lovableSpeech(input: {
   const buf = new Uint8Array(await res.arrayBuffer());
   return { bytes: buf, contentType: res.headers.get("content-type") ?? "audio/wav" };
 }
+
+/**
+ * Hyper Audio Omni (music) — text to music on the Lovable AI Gateway.
+ * The gateway currently exposes no music model, so this raises a clear,
+ * user-facing message instead of an opaque provider error.
+ */
+export async function lovableMusic(input: {
+  prompt: string;
+  seconds?: number | undefined;
+  model?: string | undefined;
+}): Promise<{ bytes: Uint8Array; contentType: string }> {
+  const res = await fetch(`${LOVABLE_BASE}/audio/music`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${lovableKey()}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: input.model ?? "google/lyria-002",
+      prompt: input.prompt,
+      ...(input.seconds ? { duration_seconds: input.seconds } : {}),
+    }),
+  });
+  if (!res.ok) {
+    if (res.status === 404 || res.status === 400) {
+      throw new Error(
+        "Music generation is not enabled on this workspace yet — no music model is available on the AI gateway. Text to speech is fully available in the meantime.",
+      );
+    }
+    const text = await res.text();
+    throw new Error(`Music generation failed (${res.status}): ${text.slice(0, 300)}`);
+  }
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  return { bytes, contentType: res.headers.get("content-type") ?? "audio/wav" };
+}
