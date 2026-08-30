@@ -114,7 +114,10 @@ export function TopBar() {
               onNavigate={() => setMenuOpen(false)}
               disabled={!i.to}
             />
-          ))}
+          <p className="px-3 pb-1.5 pt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
+            My Work
+          </p>
+          <DrawerLink icon={LibraryBig} label="Library" to="/library" onNavigate={() => setMenuOpen(false)} />
           <p className="px-3 pb-1.5 pt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
             Company
           </p>
