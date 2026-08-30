@@ -4,10 +4,7 @@ import { toast } from "sonner";
 import { Download, Search, Trash2, ImageIcon, Video, AudioLines, PenTool } from "lucide-react";
 import { StudioLayout } from "@/components/hyper/StudioLayout";
 import { cn } from "@/lib/utils";
-import g1 from "@/assets/gallery-1.jpg";
-import g2 from "@/assets/gallery-2.jpg";
-import g3 from "@/assets/gallery-3.jpg";
-import g4 from "@/assets/gallery-4.jpg";
+import { libraryAssets, type AssetKind, type LibraryAsset } from "@/lib/content";
 
 export const Route = createFileRoute("/library")({
   head: () => ({
