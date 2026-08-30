@@ -36,7 +36,6 @@ const drawerGenerate: { label: string; icon: typeof Home; to?: string }[] = [
   { label: "Virtual Model", icon: UserSquare, to: "/virtual-model" },
   { label: "Video", icon: Video, to: "/video" },
   { label: "Audio", icon: AudioLines, to: "/audio" },
-  { label: "Library", icon: LibraryBig, to: "/library" },
 ];
 
 function DrawerLink({
