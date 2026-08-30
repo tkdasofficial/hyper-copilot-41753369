@@ -97,11 +97,13 @@ export function Sidebar() {
             <NavItem key={i.label} item={i} />
           ))}
         </div>
-        <SectionLabel>Assets</SectionLabel>
-        <div className="space-y-0.5">
-          {library.map((i) => (
-            <NavItem key={i.label} item={i} />
-          ))}
+        <div className="mt-6 border-t border-border pt-1">
+          <SectionLabel>My Work</SectionLabel>
+          <div className="space-y-0.5">
+            {myWork.map((i) => (
+              <NavItem key={i.label} item={i} />
+            ))}
+          </div>
         </div>
       </nav>
 
