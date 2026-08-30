@@ -21,6 +21,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as VideoRouteImport } from './routes/video'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedGettingReadyRouteImport } from './routes/_authenticated/getting-ready'
 import { Route as ApiGenerateImageRouteImport } from './routes/api/generate-image'
 import { Route as VirtualModelIndexRouteImport } from './routes/virtual-model.index'
@@ -85,6 +86,11 @@ const VideoRoute = VideoRouteImport.update({
   path: '/video',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedGettingReadyRoute =
   AuthenticatedGettingReadyRouteImport.update({
     id: '/getting-ready',
@@ -119,6 +125,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/verify': typeof VerifyRoute
   '/video': typeof VideoRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/getting-ready': typeof AuthenticatedGettingReadyRoute
   '/api/generate-image': typeof ApiGenerateImageRoute
   '/virtual-model/create-model': typeof VirtualModelCreateModelRoute
@@ -136,6 +143,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/verify': typeof VerifyRoute
   '/video': typeof VideoRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
   '/getting-ready': typeof AuthenticatedGettingReadyRoute
   '/api/generate-image': typeof ApiGenerateImageRoute
   '/virtual-model/create-model': typeof VirtualModelCreateModelRoute
@@ -155,6 +163,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/verify': typeof VerifyRoute
   '/video': typeof VideoRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/getting-ready': typeof AuthenticatedGettingReadyRoute
   '/api/generate-image': typeof ApiGenerateImageRoute
   '/virtual-model/create-model': typeof VirtualModelCreateModelRoute
@@ -174,6 +183,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verify'
     | '/video'
+    | '/dashboard'
     | '/getting-ready'
     | '/api/generate-image'
     | '/virtual-model/create-model'
@@ -191,6 +201,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verify'
     | '/video'
+    | '/dashboard'
     | '/getting-ready'
     | '/api/generate-image'
     | '/virtual-model/create-model'
@@ -209,6 +220,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/verify'
     | '/video'
+    | '/_authenticated/dashboard'
     | '/_authenticated/getting-ready'
     | '/api/generate-image'
     | '/virtual-model/create-model'
@@ -319,6 +331,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VideoRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/getting-ready': {
       id: '/_authenticated/getting-ready'
       path: '/getting-ready'
@@ -351,10 +370,12 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedGettingReadyRoute: typeof AuthenticatedGettingReadyRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedGettingReadyRoute: AuthenticatedGettingReadyRoute,
 }
 
