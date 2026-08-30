@@ -6,12 +6,19 @@ import type { VirtualModelImage, VirtualModelRecord } from "@/lib/virtual-model.
 export const createVirtualModel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator(
-    (input: { name: string; description: string; identityPrompt: string; seed?: number }) => input,
+    (input: {
+      name: string;
+      description: string;
+      identityPrompt: string;
+      seed?: number;
+      consistency?: number;
+    }) => input,
   )
   .handler(async ({ data, context }) => {
     const { buildCharacterProfile } = await import("@/lib/virtual-model.server");
     return buildCharacterProfile(context.userId, data);
   });
+
 
 export const listVirtualModels = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
