@@ -152,17 +152,22 @@ export async function pixazoImage(input: {
   seed?: number | undefined;
   steps?: number | undefined;
   guidance?: number | undefined;
+  strength?: number | undefined;
 }): Promise<string> {
   if (input.imageUrl) {
-    return pixazoStableDiffusion({ ...input, imageUrl: input.imageUrl });
+    const imageUrl = input.imageUrl;
+    return withRetry(() => pixazoStableDiffusion({ ...input, imageUrl }));
   }
-  return pixazoFluxSchnell({
-    prompt: input.prompt,
-    width: input.width,
-    height: input.height,
-    seed: input.seed,
-  });
+  return withRetry(() =>
+    pixazoFluxSchnell({
+      prompt: input.prompt,
+      width: input.width,
+      height: input.height,
+      seed: input.seed,
+    }),
+  );
 }
+
 
 
 /** Hyper Video Omni — LTX free tier. Returns an async job id. */
