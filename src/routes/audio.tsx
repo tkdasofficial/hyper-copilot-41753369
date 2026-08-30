@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { StudioLayout } from "@/components/hyper/StudioLayout";
 import { Chips, Panel, Segment, SliderRow, SwitchRow, TextRow } from "@/components/hyper/StudioControls";
 import { RecentCreations } from "@/components/hyper/RecentCreations";
+import { generateSpeech } from "@/lib/generation.functions";
 
 export const Route = createFileRoute("/audio")({
   head: () => ({
@@ -32,7 +34,13 @@ const genres = ["Cinematic", "Electronic", "Lo-Fi", "Orchestral", "Hip-Hop", "Am
 const moods = ["Epic", "Calm", "Dark", "Uplifting", "Melancholic", "Tense"] as const;
 const durations = ["15s", "30s", "60s", "3 min"] as const;
 const formats = ["WAV", "MP3", "FLAC"] as const;
-const vocals = ["None", "Female", "Male", "Choir"] as const;
+const vocals = ["Warm", "Bright", "Deep", "Calm"] as const;
+const voiceMap: Record<(typeof vocals)[number], string> = {
+  Warm: "Kore",
+  Bright: "Puck",
+  Deep: "Charon",
+  Calm: "Aoede",
+};
 
 function AudioStudio() {
   const [prompt, setPrompt] = useState("");
@@ -48,6 +56,35 @@ function AudioStudio() {
   const [instrumental, setInstrumental] = useState(false);
   const [loop, setLoop] = useState(false);
   const [count, setCount] = useState(1);
+  const [busy, setBusy] = useState(false);
+  const [trackUrl, setTrackUrl] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const generate = async () => {
+    const script = (lyrics.trim() || prompt.trim()).trim();
+    if (!script) {
+      toast.error("Write the script or prompt you want spoken first.");
+      return;
+    }
+    if (kind !== "Voiceover") {
+      toast.info("Music and sound effects are coming soon.", {
+        description: "Hyper Audio Omni currently generates speech. Switch Type to Voiceover.",
+      });
+      return;
+    }
+    setBusy(true);
+    setTrackUrl(null);
+    try {
+      const res = await generateSpeech({ data: { text: script, voice: voiceMap[vocal] } });
+      setTrackUrl(res.url ?? null);
+      void queryClient.invalidateQueries({ queryKey: ["generations"] });
+      toast.success("Speech ready");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Speech generation failed");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <StudioLayout>
@@ -94,7 +131,7 @@ function AudioStudio() {
           <Segment label="Duration" options={durations} value={duration} onChange={setDuration} />
         </Panel>
 
-        <Panel title="Vocals" summary={instrumental ? "Instrumental" : vocal}>
+        <Panel title="Voice" summary={instrumental ? "Instrumental" : vocal}>
           <Segment options={vocals} value={vocal} onChange={setVocal} />
           <SwitchRow label="Instrumental only" checked={instrumental} onCheckedChange={setInstrumental} />
         </Panel>
@@ -107,17 +144,16 @@ function AudioStudio() {
 
         <button
           type="button"
-          onClick={() =>
-            prompt.trim()
-              ? toast.success(`Queued ${count} track${count === 1 ? "" : "s"}`, {
-                  description: `${model} · ${kind} · ${genre} · ${tempo} BPM · ${duration}`,
-                })
-              : toast.error("Describe the sound you want to create first.")
-          }
-          className="w-full rounded-full bg-primary py-3 text-[14px] font-bold text-primary-foreground transition-opacity hover:opacity-90"
+          disabled={busy}
+          onClick={() => void generate()}
+          className="w-full rounded-full bg-primary py-3 text-[14px] font-bold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          Generate
+          {busy ? "Generating…" : "Generate"}
         </button>
+
+        {trackUrl ? (
+          <audio src={trackUrl} controls className="w-full rounded-full border border-border bg-surface" />
+        ) : null}
 
         <RecentCreations />
       </div>
