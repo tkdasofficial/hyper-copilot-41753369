@@ -33,7 +33,7 @@ export function ProfileMenu() {
   const queryClient = useQueryClient();
   const { user } = useSession();
 
-  const name = (user?.user_metadata?.full_name as string | undefined) ?? user?.email ?? "Guest";
+  const name = (user?.user_metadata?.['full_name'] as string | undefined) ?? user?.email ?? "Guest";
   const initials = user ? initialsFor(name) : null;
 
   async function handleSignOut() {
