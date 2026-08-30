@@ -69,9 +69,8 @@ const modelsByModality: Record<string, { id: string; name: string; note: string 
   Video: [
     { id: "hyper-video-omni", name: "Hyper Video Omni", note: "Text & image to video" },
   ],
-  Audio: [
-    { id: "hyper-audio-omni", name: "Hyper Audio Omni", note: "Text to speech" },
-  ],
+  Audio: TTS_MODELS.map((m) => ({ id: m.id, name: m.name, note: m.note })),
+
   Vector: imageModels,
 };
 
