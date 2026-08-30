@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { account } from "@/lib/content";
 import {
   Crown,
   Search,
