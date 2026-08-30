@@ -1,7 +1,7 @@
 /** Server-only character generation pipeline. */
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { pixazoStableDiffusion, sizeForAspect } from "@/lib/providers.server";
+import { pixazoImage, sizeForAspect } from "@/lib/providers.server";
 import {
   GENERATIONS_BUCKET,
   MODELS_BUCKET,
