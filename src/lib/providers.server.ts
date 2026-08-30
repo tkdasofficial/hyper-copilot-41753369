@@ -48,10 +48,20 @@ export function sizeForAspect(aspect: string, base = 1024): { width: number; hei
   return { width: round(w), height: round(h) };
 }
 
-/** Hyper Image Flash — Stable Diffusion Inpainting (text-to-image & image-to-image). */
+/** Quality guard rails applied to every Pixazo image request. */
+const DEFAULT_NEGATIVE =
+  "lowres, worst quality, low quality, jpeg artifacts, blurry, out of focus, deformed, disfigured, mutated, extra limbs, extra fingers, bad anatomy, bad proportions, watermark, text, logo, signature, cropped, duplicate, glitch, noise, grain, oversaturated, creepy, horror";
+
+/**
+ * Stable Diffusion Inpainting — image-to-image only.
+ *
+ * The provider endpoint composites onto a fixed built-in base photo when no
+ * `imageUrl` is supplied, which produced nonsense output. Callers must pass a
+ * source image; use `pixazoImage` for prompt-only requests.
+ */
 export async function pixazoStableDiffusion(input: {
   prompt: string;
-  imageUrl?: string | undefined;
+  imageUrl: string;
   maskUrl?: string | undefined;
   negativePrompt?: string | undefined;
   width: number;
@@ -64,12 +74,12 @@ export async function pixazoStableDiffusion(input: {
     "/inpainting/v1/getImage",
     {
       prompt: input.prompt,
-      ...(input.imageUrl ? { imageUrl: input.imageUrl } : {}),
+      imageUrl: input.imageUrl,
       ...(input.maskUrl ? { maskUrl: input.maskUrl } : {}),
-      ...(input.negativePrompt ? { negative_prompt: input.negativePrompt } : {}),
+      negative_prompt: [input.negativePrompt, DEFAULT_NEGATIVE].filter(Boolean).join(", "),
       width: input.width,
       height: input.height,
-      num_steps: input.steps ?? 20,
+      num_steps: input.steps ?? 30,
       guidance: input.guidance ?? 7.5,
       ...(input.seed === undefined ? {} : { seed: input.seed }),
     },
@@ -91,7 +101,7 @@ export async function pixazoFluxSchnell(input: {
     "/flux-1-schnell/v1/getData",
     {
       prompt: input.prompt,
-      num_steps: Math.min(8, Math.max(1, input.steps ?? 4)),
+      num_steps: Math.min(8, Math.max(4, input.steps ?? 8)),
       width: input.width,
       height: input.height,
       ...(input.seed === undefined ? {} : { seed: input.seed }),
@@ -101,6 +111,34 @@ export async function pixazoFluxSchnell(input: {
   if (!url) throw new Error("Image provider returned no image");
   return url;
 }
+
+/**
+ * Hyper Image Flash — routes to the right Pixazo model for the request:
+ * a reference image goes to Stable Diffusion Inpainting (image-to-image),
+ * a prompt-only request goes to a real text-to-image model.
+ */
+export async function pixazoImage(input: {
+  prompt: string;
+  imageUrl?: string | undefined;
+  maskUrl?: string | undefined;
+  negativePrompt?: string | undefined;
+  width: number;
+  height: number;
+  seed?: number | undefined;
+  steps?: number | undefined;
+  guidance?: number | undefined;
+}): Promise<string> {
+  if (input.imageUrl) {
+    return pixazoStableDiffusion({ ...input, imageUrl: input.imageUrl });
+  }
+  return pixazoFluxSchnell({
+    prompt: input.prompt,
+    width: input.width,
+    height: input.height,
+    seed: input.seed,
+  });
+}
+
 
 /** Hyper Video Omni — LTX free tier. Returns an async job id. */
 export async function pixazoStartVideo(input: {

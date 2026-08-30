@@ -1,7 +1,7 @@
 /** Server-only character generation pipeline. */
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { pixazoStableDiffusion, sizeForAspect } from "@/lib/providers.server";
+import { pixazoImage, sizeForAspect } from "@/lib/providers.server";
 import {
   GENERATIONS_BUCKET,
   MODELS_BUCKET,
@@ -41,18 +41,19 @@ export async function buildCharacterProfile(
   try {
     for (const view of MODEL_VIEWS) {
       const isPortrait = view.id === "headshot" || view.id === "three-quarter";
-      const providerUrl = await pixazoStableDiffusion({
+      const providerUrl = await pixazoImage({
         prompt: viewPrompt(input.identityPrompt, view.instruction),
         negativePrompt: IDENTITY_NEGATIVE,
         width: isPortrait ? 768 : 704,
         height: isPortrait ? 768 : 1024,
         seed,
-        steps: 20,
+        steps: 30,
         guidance: 8,
-        // Every view after the headshot is conditioned on it, so the face and
-        // body structure stay locked to the same person.
+        // The headshot is a pure text-to-image render; every later view is
+        // conditioned on it so the face and body structure stay locked.
         imageUrl: referenceUrl,
       });
+
       const path = await uploadFromUrl(MODELS_BUCKET, userId, providerUrl);
       images.push({ view: view.id, path });
       if (!referenceUrl) {
@@ -93,7 +94,7 @@ export async function renderCharacterImage(
     : null;
   const { width, height } = sizeForAspect(input.aspect ?? "4:5");
 
-  const providerUrl = await pixazoStableDiffusion({
+  const providerUrl = await pixazoImage({
     prompt: `${input.identityPrompt}. ${input.prompt}. Keep the exact same face, bone structure and body proportions as the reference person, photorealistic, ultra detailed`,
     negativePrompt: input.negativePrompt || IDENTITY_NEGATIVE,
     imageUrl: reference ?? undefined,

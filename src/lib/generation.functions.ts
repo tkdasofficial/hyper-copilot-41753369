@@ -77,7 +77,7 @@ export const generateImage = createServerFn({ method: "POST" })
           url,
         );
       } else {
-        const url = await providers.pixazoStableDiffusion({
+        const url = await providers.pixazoImage({
           prompt: data.prompt,
           width,
           height,
