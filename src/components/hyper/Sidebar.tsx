@@ -32,7 +32,7 @@ const generate: Item[] = [
   { label: "3D Scene", icon: Boxes, badge: "Beta" },
 ];
 
-const library: Item[] = [{ label: "Library", icon: LibraryBig, to: "/library" }];
+const myWork: Item[] = [{ label: "Library", icon: LibraryBig, to: "/library" }];
 
 
 function NavItem({ item }: { item: Item }) {
@@ -97,11 +97,13 @@ export function Sidebar() {
             <NavItem key={i.label} item={i} />
           ))}
         </div>
-        <SectionLabel>Assets</SectionLabel>
-        <div className="space-y-0.5">
-          {library.map((i) => (
-            <NavItem key={i.label} item={i} />
-          ))}
+        <div className="mt-6 border-t border-border pt-1">
+          <SectionLabel>My Work</SectionLabel>
+          <div className="space-y-0.5">
+            {myWork.map((i) => (
+              <NavItem key={i.label} item={i} />
+            ))}
+          </div>
         </div>
       </nav>
 

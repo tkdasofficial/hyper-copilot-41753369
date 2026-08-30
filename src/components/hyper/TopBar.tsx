@@ -36,7 +36,6 @@ const drawerGenerate: { label: string; icon: typeof Home; to?: string }[] = [
   { label: "Virtual Model", icon: UserSquare, to: "/virtual-model" },
   { label: "Video", icon: Video, to: "/video" },
   { label: "Audio", icon: AudioLines, to: "/audio" },
-  { label: "Library", icon: LibraryBig, to: "/library" },
 ];
 
 function DrawerLink({
@@ -116,6 +115,10 @@ export function TopBar() {
               disabled={!i.to}
             />
           ))}
+          <p className="px-3 pb-1.5 pt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
+            My Work
+          </p>
+          <DrawerLink icon={LibraryBig} label="Library" to="/library" onNavigate={() => setMenuOpen(false)} />
           <p className="px-3 pb-1.5 pt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
             Company
           </p>
