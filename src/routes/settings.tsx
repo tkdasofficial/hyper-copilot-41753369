@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { account } from "@/lib/content";
 import { Monitor, Moon, Sun } from "lucide-react";
 import { Sidebar } from "@/components/hyper/Sidebar";
 import { TopBar } from "@/components/hyper/TopBar";
