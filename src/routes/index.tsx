@@ -17,7 +17,6 @@ import {
   Zap,
 } from "lucide-react";
 import { Logo } from "@/components/hyper/Logo";
-import { ThemeToggle } from "@/components/hyper/ThemeToggle";
 import { useSession } from "@/hooks/useSession";
 
 export const Route = createFileRoute("/")({
