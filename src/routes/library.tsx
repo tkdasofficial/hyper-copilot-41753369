@@ -27,77 +27,12 @@ export const Route = createFileRoute("/library")({
   component: LibraryPage,
 });
 
-type Kind = "Image" | "Video" | "Audio" | "Vector";
-
-type Asset = {
-  id: string;
-  kind: Kind;
-  src?: string;
-  alt?: string;
-  prompt: string;
-  meta: string;
-  date: string;
-};
-
-const kindIcon: Record<Kind, typeof ImageIcon> = {
+const kindIcon: Record<AssetKind, typeof ImageIcon> = {
   Image: ImageIcon,
   Video: Video,
   Audio: AudioLines,
   Vector: PenTool,
 };
-
-const initialAssets: Asset[] = [
-  {
-    id: "a1",
-    kind: "Image",
-    src: g1,
-    alt: "Iridescent chrome orchid on a dark background",
-    prompt: "chrome liquid-metal orchid blooming in zero gravity, iridescent light",
-    meta: "Hyper Image Flash · 4:5",
-    date: "Today",
-  },
-  {
-    id: "a2",
-    kind: "Image",
-    src: g2,
-    alt: "Curved concrete pavilion in a desert at sunset",
-    prompt: "curved concrete pavilion at dusk in the desert, warm amber spill",
-    meta: "Hyper Image Flash · 3:2",
-    date: "Today",
-  },
-  {
-    id: "a3",
-    kind: "Image",
-    src: g3,
-    alt: "Portrait of an astronaut with neon-lit visor",
-    prompt: "astronaut-explorer with holographic visor reflecting a neon city",
-    meta: "Hyper Image Quality · 2:3",
-    date: "Yesterday",
-  },
-  {
-    id: "a4",
-    kind: "Vector",
-    src: g4,
-    alt: "Abstract translucent glass ribbons in violet and coral",
-    prompt: "translucent glass ribbons in coral and violet, soft caustics",
-    meta: "Hyper Vector · SVG",
-    date: "Yesterday",
-  },
-  {
-    id: "a5",
-    kind: "Video",
-    prompt: "slow dolly through a rain-soaked neon alley, cinematic grade",
-    meta: "Hyper Video Omni · 8s · 16:9",
-    date: "2 days ago",
-  },
-  {
-    id: "a6",
-    kind: "Audio",
-    prompt: "epic orchestral cue with rising strings and taiko drums",
-    meta: "Hyper Audio Omni · 60s · WAV",
-    date: "3 days ago",
-  },
-];
 
 const filters = ["All", "Image", "Video", "Audio", "Vector"] as const;
 
