@@ -52,6 +52,7 @@ function CreateModel() {
   const [ethnicity, setEthnicity] = useState<(typeof ethnicities)[number]>(ethnicities[0]);
   const [traits, setTraits] = useState<string[]>([]);
   const [persona, setPersona] = useState("");
+  const [consistency, setConsistency] = useState(92);
   const queryClient = useQueryClient();
 
   const identityPrompt = () =>
@@ -76,6 +77,7 @@ function CreateModel() {
           name: name.trim() || "New model",
           description: `${gender} · ${age} · ${height}cm · ${body} · ${styleMode}`,
           identityPrompt: identityPrompt(),
+          consistency,
         },
       }),
     onSuccess: () => {
@@ -88,6 +90,7 @@ function CreateModel() {
     onError: (err) =>
       toast.error(err instanceof Error ? err.message : "Could not create the model"),
   });
+
 
   return (
     <StudioLayout>
@@ -130,6 +133,23 @@ function CreateModel() {
             placeholder="Tokyo-based streetwear creator, warm and playful…"
           />
         </Panel>
+
+        <Panel title="Consistency" summary={`${consistency}% identity lock`}>
+          <SliderRow
+            label="Identity lock"
+            value={consistency}
+            onChange={setConsistency}
+            min={40}
+            max={100}
+            suffix="%"
+          />
+          <p className="pt-1 text-[11px] leading-relaxed text-muted-foreground">
+            Higher values hold the face and body structure tighter across all six views and every
+            later render. Lower values allow more variation between shots.
+          </p>
+        </Panel>
+
+
 
         <button
           type="button"
