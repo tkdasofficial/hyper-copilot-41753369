@@ -37,7 +37,7 @@ const kindIcon: Record<AssetKind, typeof ImageIcon> = {
 const filters = ["All", "Image", "Video", "Audio", "Vector"] as const;
 
 function LibraryPage() {
-  const [assets, setAssets] = useState(initialAssets);
+  const [assets, setAssets] = useState<LibraryAsset[]>(libraryAssets);
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
   const [query, setQuery] = useState("");
 
