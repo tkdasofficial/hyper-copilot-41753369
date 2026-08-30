@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import { CreditCard, FileText, Settings, ShieldCheck, LogOut } from "lucide-react";
+import { CreditCard, FileText, Settings, ShieldCheck, LogOut, User } from "lucide-react";
+import { account } from "@/lib/content";
 import {
   DropdownMenu,
   DropdownMenuContent,
