@@ -32,7 +32,7 @@ const generate: Item[] = [
   { label: "3D Scene", icon: Boxes, badge: "Beta" },
 ];
 
-const library: Item[] = [{ label: "Library", icon: LibraryBig, to: "/library" }];
+const myWork: Item[] = [{ label: "Library", icon: LibraryBig, to: "/library" }];
 
 
 function NavItem({ item }: { item: Item }) {
