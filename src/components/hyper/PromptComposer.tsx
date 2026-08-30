@@ -20,7 +20,13 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
-import { streamImage } from "@/lib/streamImage";
+import {
+  generateImage,
+  generateSpeech,
+  pollVideo,
+  startVideo,
+  uploadReference,
+} from "@/lib/generation.functions";
 import { ResultsGrid, type GenResult } from "./ResultsGrid";
 
 const modalities = [
@@ -32,24 +38,33 @@ const modalities = [
 
 const imageModels = [
   {
-    id: "google/gemini-3.1-flash-lite-image",
+    id: "hyper-image-speed",
     name: "Hyper Image Speed",
-    note: "Fastest drafts",
+    note: "Fastest drafts · text to image",
   },
   {
-    id: "google/gemini-3.1-flash-image",
+    id: "hyper-image-flash",
     name: "Hyper Image Flash",
-    note: "Balanced quality & speed",
+    note: "Balanced · text & image to image",
   },
-  { id: "google/gemini-3-pro-image", name: "Hyper Image Quality", note: "Highest fidelity" },
+  {
+    id: "hyper-image-quality",
+    name: "Hyper Image Quality",
+    note: "Highest fidelity · text & image to image",
+  },
 ];
 
 const modelsByModality: Record<string, { id: string; name: string; note: string }[]> = {
   Image: imageModels,
-  Video: [{ id: "hyper-video-omni", name: "Hyper Video Omni", note: "All-in-one video model" }],
-  Audio: [{ id: "hyper-audio-omni", name: "Hyper Audio Omni", note: "All-in-one audio model" }],
+  Video: [
+    { id: "hyper-video-omni", name: "Hyper Video Omni", note: "Text & image to video" },
+  ],
+  Audio: [
+    { id: "hyper-audio-omni", name: "Hyper Audio Omni", note: "Text to speech" },
+  ],
   Vector: imageModels,
 };
+
 
 const ratios = [
   { label: "1:1", note: "Square", w: 1, h: 1 },
@@ -170,7 +185,9 @@ export function PromptComposer() {
   const [style, setStyle] = useState(styles[0]!);
   const [styleStrength, setStyleStrength] = useState([65]);
   const [modes, setModes] = useState<string[]>([]);
-  const [refs, setRefs] = useState<{ id: string; name: string; url: string }[]>([]);
+  const [refs, setRefs] = useState<
+    { id: string; name: string; url: string; dataUrl?: string }[]
+  >([]);
   const [count, setCount] = useState([4]);
   const [seedLocked, setSeedLocked] = useState(false);
   const [seed, setSeed] = useState(() => Math.floor(Math.random() * 999999));
@@ -189,81 +206,161 @@ export function PromptComposer() {
 
   const onFiles = (files: FileList | null) => {
     if (!files) return;
-    const next = Array.from(files)
-      .slice(0, 4)
-      .map((f) => ({ id: `${f.name}-${f.size}-${Math.random()}`, name: f.name, url: URL.createObjectURL(f) }));
-    setRefs((r) => [...r, ...next].slice(0, 4));
-    if (next.length && modes.length === 0) setModes(["reference"]);
+    const chosen = Array.from(files).slice(0, 4);
+    chosen.forEach((f) => {
+      const id = `${f.name}-${f.size}-${Math.random()}`;
+      setRefs((r) => [...r, { id, name: f.name, url: URL.createObjectURL(f) }].slice(0, 4));
+      const reader = new FileReader();
+      reader.onload = () => {
+        const dataUrl = String(reader.result ?? "");
+        setRefs((r) => r.map((x) => (x.id === id ? { ...x, dataUrl } : x)));
+      };
+      reader.readAsDataURL(f);
+    });
+    if (chosen.length && modes.length === 0) setModes(["reference"]);
   };
+
+  const referenceUrls = async () => {
+    const withData = refs.filter((r) => r.dataUrl);
+    const uploaded = await Promise.all(
+      withData.map((r) => uploadReference({ data: { dataUrl: r.dataUrl! } })),
+    );
+    return uploaded.map((u) => u.url).filter((u): u is string => !!u);
+  };
+
+  const promptWithStyle = (prompt: string) =>
+    style.name && style.name !== "None" ? `${prompt}. ${style.name} style` : prompt;
 
   const generate = async () => {
     if (!value.trim()) {
       toast.error("Describe what you want to create first.");
       return;
     }
-    if (active !== "Image") {
-      toast.info(`${active} generation is coming soon. Image generation is live now.`);
-      return;
-    }
-    if (!seedLocked) setSeed(Math.floor(Math.random() * 999999));
-
     const prompt = value.trim();
-    const n = count[0] ?? 4;
-    const baseId = `${Date.now()}`;
-    const placeholders: GenResult[] = Array.from({ length: n }, (_, i) => ({
-      id: `${baseId}-${i}`,
-      prompt,
-      dataUrl: "",
-      isFinal: false,
-      model: model.name,
-      ratioLabel: ratio.label,
-      styleName: style.name,
-    }));
-    setResults((r) => [...placeholders, ...r]);
+    const nextSeed = seedLocked ? seed : Math.floor(Math.random() * 999999);
+    if (!seedLocked) setSeed(nextSeed);
     setGenerating(true);
 
-    toast.success(`Generating ${n} image${n === 1 ? "" : "s"}…`, {
-      description: `${model.name} · ${ratio.label} · ${style.name}`,
-    });
+    try {
+      if (active === "Audio") {
+        const ph: GenResult = {
+          id: `${Date.now()}`,
+          prompt,
+          dataUrl: "",
+          isFinal: false,
+          kind: "audio",
+          model: model.name,
+          ratioLabel: "Speech",
+          styleName: style.name,
+        };
+        setResults((r) => [ph, ...r]);
+        toast.success("Generating speech…");
+        const res = await generateSpeech({ data: { text: prompt } });
+        setResults((list) =>
+          list.map((r) => (r.id === ph.id ? { ...r, dataUrl: res.url ?? "", isFinal: true } : r)),
+        );
+        return;
+      }
 
-    // Generate each variation in parallel; each streams partial frames into its card.
-    const tasks = placeholders.map((ph, i) =>
-      (async () => {
-        try {
-          let gotFrame = false;
-          await streamImage("/api/generate-image", prompt, model.id, (dataUrl, isFinal) => {
-            gotFrame = true;
+      if (active === "Video") {
+        const ph: GenResult = {
+          id: `${Date.now()}`,
+          prompt,
+          dataUrl: "",
+          isFinal: false,
+          kind: "video",
+          model: model.name,
+          ratioLabel: ratio.label,
+          styleName: style.name,
+        };
+        setResults((r) => [ph, ...r]);
+        toast.success("Generating video…", { description: "This can take a few minutes." });
+        const urls = await referenceUrls();
+        const job = await startVideo({
+          data: {
+            prompt: promptWithStyle(prompt),
+            aspect: ratio.label,
+            seed: nextSeed,
+            ...(urls[0] ? { imageUrl: urls[0] } : {}),
+          },
+        });
+        for (let attempt = 0; attempt < 120; attempt += 1) {
+          await new Promise((res) => setTimeout(res, 5000));
+          const status = await pollVideo({ data: { id: job.id, requestId: job.requestId } });
+          if (status.status === "completed") {
             setResults((list) =>
-              list.map((r) => (r.id === ph.id ? { ...r, dataUrl, isFinal } : r)),
+              list.map((r) =>
+                r.id === ph.id ? { ...r, dataUrl: status.url ?? "", isFinal: true } : r,
+              ),
             );
-          });
-          // Zero-event stream: replay once non-streaming to recover the image.
-          if (!gotFrame) {
-            await streamImage("/api/generate-image", prompt, model.id, (dataUrl, isFinal) => {
-              setResults((list) =>
-                list.map((r) => (r.id === ph.id ? { ...r, dataUrl, isFinal } : r)),
-              );
-            });
+            return;
           }
-        } catch (err) {
-          setResults((list) =>
-            list.map((r) =>
-              r.id === ph.id
-                ? {
-                    ...r,
-                    prompt: `Failed to generate (${err instanceof Error ? err.message : "error"})`,
-                  }
-                : r,
-            ),
-          );
-        } finally {
-          setGenerating((g) => (i === n - 1 ? false : g));
+          if (status.status === "failed") throw new Error(status.error ?? "Video failed");
         }
-      })(),
-    );
-    await Promise.all(tasks);
-    setGenerating(false);
+        throw new Error("Video generation timed out");
+      }
+
+      // Image / Vector
+      const n = count[0] ?? 4;
+      const baseId = `${Date.now()}`;
+      const placeholders: GenResult[] = Array.from({ length: n }, (_, i) => ({
+        id: `${baseId}-${i}`,
+        prompt,
+        dataUrl: "",
+        isFinal: false,
+        kind: "image" as const,
+        model: model.name,
+        ratioLabel: ratio.label,
+        styleName: style.name,
+      }));
+      setResults((r) => [...placeholders, ...r]);
+      toast.success(`Generating ${n} image${n === 1 ? "" : "s"}…`, {
+        description: `${model.name} · ${ratio.label} · ${style.name}`,
+      });
+
+      const urls = model.id === "hyper-image-speed" ? [] : await referenceUrls();
+      if (urls.length && model.id === "hyper-image-speed") {
+        toast.info("Hyper Image Speed is text to image only — references were ignored.");
+      }
+
+      await Promise.all(
+        placeholders.map(async (ph, i) => {
+          try {
+            const res = await generateImage({
+              data: {
+                prompt: promptWithStyle(
+                  active === "Vector" ? `${prompt}. flat vector illustration, clean shapes` : prompt,
+                ),
+                model: model.id,
+                aspect: ratio.label,
+                seed: nextSeed + i,
+                referenceUrls: urls,
+              },
+            });
+            setResults((list) =>
+              list.map((r) => (r.id === ph.id ? { ...r, dataUrl: res.url ?? "", isFinal: true } : r)),
+            );
+          } catch (err) {
+            setResults((list) =>
+              list.map((r) =>
+                r.id === ph.id
+                  ? {
+                      ...r,
+                      prompt: `Failed to generate (${err instanceof Error ? err.message : "error"})`,
+                    }
+                  : r,
+              ),
+            );
+          }
+        }),
+      );
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Generation failed");
+    } finally {
+      setGenerating(false);
+    }
   };
+
 
   return (
     <div className="w-full">
