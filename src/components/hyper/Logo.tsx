@@ -27,9 +27,10 @@ function LogoMark({ className }: { className?: string }) {
   );
 }
 
+/** Wordmark uses currentColor, so it adapts to both light and dark themes. */
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cn("flex items-center gap-2.5", className)}>
+    <span className={cn("flex items-center gap-2.5 text-foreground", className)}>
       <LogoMark className="h-7 w-7 rounded-md" />
       <span className="text-[15px] font-extrabold tracking-tight">Hyper Copilot</span>
     </span>
