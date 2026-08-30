@@ -167,25 +167,35 @@ export const startVideo = createServerFn({ method: "POST" })
     (input: {
       prompt: string;
       imageUrl?: string;
+      endImageUrl?: string;
       negative?: string;
       aspect?: string;
       seed?: number;
       frames?: number;
       frameRate?: number;
+      resolution?: string;
     }) => input,
   )
   .handler(async ({ data, context }) => {
     const providers = await import("@/lib/providers.server");
+    const { videoSize } = await import("@/lib/media.shared");
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const aspect = data.aspect ?? "16:9";
+    const resolution = data.resolution ?? "720p";
+    const { width, height } = videoSize(aspect, resolution);
 
     const requestId = await providers.pixazoStartVideo({
       prompt: data.prompt,
       imageUrl: data.imageUrl,
+      endImageUrl: data.endImageUrl,
       negative: data.negative,
-      aspect: data.aspect,
+      aspect,
       seed: data.seed,
       frames: data.frames,
       frameRate: data.frameRate,
+      width,
+      height,
     });
 
     const { data: row, error } = await supabaseAdmin
@@ -196,13 +206,20 @@ export const startVideo = createServerFn({ method: "POST" })
         model: "hyper-video-omni",
         prompt: data.prompt,
         status: "running",
-        params: { requestId, aspect: data.aspect ?? "16:9" },
+        params: {
+          requestId,
+          aspect,
+          resolution,
+          frames: data.frames ?? null,
+          frameRate: data.frameRate ?? null,
+        },
       })
       .select("id")
       .single();
     if (error) throw new Error(error.message);
     return { id: row.id, requestId };
   });
+
 
 /** Polls a running video job; stores the file once the provider finishes. */
 export const pollVideo = createServerFn({ method: "POST" })
