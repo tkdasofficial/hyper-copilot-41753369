@@ -152,43 +152,67 @@ function Landing() {
           </div>
         </section>
 
-        <section aria-labelledby="features" className="mt-24">
-          <h2 id="features" className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-            Everything in one studio
-          </h2>
-          <p className="mt-1.5 text-[13.5px] text-muted-foreground">
-            The full feature set, tuned for production work.
+        <section aria-labelledby="features" className="mt-24 sm:mt-32">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
+            Features
           </p>
+          <div className="mt-2 flex flex-col gap-1.5 sm:flex-row sm:items-end sm:justify-between">
+            <h2 id="features" className="text-2xl font-extrabold tracking-[-0.02em] sm:text-3xl">
+              Everything in one studio
+            </h2>
+            <p className="max-w-sm text-[13.5px] leading-relaxed text-muted-foreground">
+              Eight production-grade engines behind a single prompt box.
+            </p>
+          </div>
           <div className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {features.map((f) => {
               const Icon = f.icon;
               return (
                 <div
                   key={f.title}
-                  className="rounded-2xl border border-border bg-surface p-4 transition-colors hover:border-border-strong"
+                  className="group relative overflow-hidden rounded-2xl border border-border bg-surface p-5 transition-colors hover:border-border-strong hover:bg-surface-2"
                 >
-                  <span className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-surface-2">
+                  <div
+                    aria-hidden
+                    className="bg-aura pointer-events-none absolute -inset-x-8 -top-16 h-32 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                  />
+                  <span className="relative grid h-10 w-10 place-items-center rounded-xl border border-border bg-surface-2">
                     <Icon className="h-[18px] w-[18px] text-spectral-3" strokeWidth={1.9} />
                   </span>
-                  <p className="mt-3 text-[14px] font-bold">{f.title}</p>
-                  <p className="mt-1 text-[12.5px] leading-snug text-muted-foreground">{f.desc}</p>
+                  <p className="relative mt-3.5 text-[14px] font-bold">{f.title}</p>
+                  <p className="relative mt-1 text-[12.5px] leading-snug text-muted-foreground">
+                    {f.desc}
+                  </p>
                 </div>
               );
             })}
           </div>
         </section>
 
-        <section aria-labelledby="details" className="mt-24">
-          <h2 id="details" className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+        <section aria-labelledby="details" className="mt-24 sm:mt-32">
+          <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
+            Why Hyper
+          </p>
+          <h2
+            id="details"
+            className="mt-2 text-2xl font-extrabold tracking-[-0.02em] sm:text-3xl"
+          >
             Built for teams that ship
           </h2>
           <div className="mt-6 grid grid-cols-1 gap-3 lg:grid-cols-3">
             {details.map((d) => {
               const Icon = d.icon;
               return (
-                <div key={d.title} className="rounded-3xl border border-border bg-surface p-6">
-                  <Icon className="h-5 w-5 text-spectral-2" strokeWidth={1.9} />
-                  <h3 className="mt-3 text-[15px] font-extrabold">{d.title}</h3>
+                <div
+                  key={d.title}
+                  className="rounded-3xl border border-border bg-surface p-6 transition-colors hover:border-border-strong"
+                >
+                  <span className="grid h-10 w-10 place-items-center rounded-xl border border-border bg-surface-2">
+                    <Icon className="h-[18px] w-[18px] text-spectral-2" strokeWidth={1.9} />
+                  </span>
+                  <h3 className="mt-3.5 text-[15px] font-extrabold tracking-[-0.01em]">
+                    {d.title}
+                  </h3>
                   <p className="mt-2 text-[13px] leading-relaxed text-muted-foreground">{d.desc}</p>
                 </div>
               );
@@ -196,35 +220,51 @@ function Landing() {
           </div>
         </section>
 
-        <section aria-labelledby="included" className="mt-24 rounded-3xl border border-border bg-surface p-7">
-          <h2 id="included" className="text-2xl font-extrabold tracking-tight">
-            What's included
+        <section
+          aria-labelledby="included"
+          className="relative mt-24 overflow-hidden rounded-3xl border border-border bg-surface p-6 sm:mt-32 sm:p-9"
+        >
+          <div
+            aria-hidden
+            className="bg-aura pointer-events-none absolute -inset-x-10 -top-24 h-48 opacity-60"
+          />
+          <p className="relative text-[11px] font-bold uppercase tracking-[0.16em] text-muted-foreground/70">
+            Included in every plan
+          </p>
+          <h2
+            id="included"
+            className="relative mt-2 text-2xl font-extrabold tracking-[-0.02em] sm:text-3xl"
+          >
+            Everything you need to go live
           </h2>
-          <ul className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <ul className="relative mt-6 grid grid-cols-1 gap-3.5 sm:grid-cols-2">
             {included.map((i) => (
-              <li key={i} className="flex items-start gap-2.5 text-[13.5px]">
-                <Check className="mt-0.5 h-4 w-4 shrink-0 text-spectral-3" strokeWidth={2.4} />
+              <li key={i} className="flex items-start gap-2.5 text-[13.5px] leading-snug">
+                <span className="mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border border-border bg-surface-2">
+                  <Check className="h-3 w-3 text-spectral-3" strokeWidth={3} />
+                </span>
                 {i}
               </li>
             ))}
           </ul>
         </section>
 
-        <section className="mt-24 text-center">
-          <h2 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
+        <section className="mt-24 text-center sm:mt-32">
+          <h2 className="text-2xl font-extrabold tracking-[-0.02em] sm:text-3xl">
             Start creating in under a minute
           </h2>
-          <p className="mx-auto mt-2 max-w-md text-[13.5px] text-muted-foreground">
+          <p className="mx-auto mt-2.5 max-w-md text-[13.5px] leading-relaxed text-muted-foreground">
             Create your account with email or Google — no credit card needed.
           </p>
           <Link
             to="/auth"
-            className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-3 text-[13.5px] font-bold text-primary-foreground transition-opacity hover:opacity-90"
+            className="mt-7 inline-flex items-center gap-1.5 rounded-full bg-primary px-5 py-3 text-[13.5px] font-bold text-primary-foreground transition-opacity hover:opacity-90"
           >
             Get started
             <ArrowRight className="h-4 w-4" strokeWidth={2.2} />
           </Link>
         </section>
+
       </main>
 
       <footer className="border-t border-border">
