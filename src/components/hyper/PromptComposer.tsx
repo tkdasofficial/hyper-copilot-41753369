@@ -869,6 +869,9 @@ export function PromptComposer() {
                   </div>
                 </PopoverContent>
               </Popover>
+              ) : null}
+
+
 
 <Chip
                 icon={Shuffle}
