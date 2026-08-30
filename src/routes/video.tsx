@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { StudioLayout } from "@/components/hyper/StudioLayout";
 import { Chips, Panel, RatioBlocks, Segment, SliderRow, SwitchRow, TextRow } from "@/components/hyper/StudioControls";
 import { RecentCreations } from "@/components/hyper/RecentCreations";
+import { pollVideo, startVideo } from "@/lib/generation.functions";
 
 export const Route = createFileRoute("/video")({
   head: () => ({
@@ -51,6 +53,47 @@ function VideoStudio() {
   const [audio, setAudio] = useState(true);
   const [seedLock, setSeedLock] = useState(false);
   const [count, setCount] = useState(1);
+  const [busy, setBusy] = useState(false);
+  const [clipUrl, setClipUrl] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+
+  const generate = async () => {
+    if (!prompt.trim()) {
+      toast.error("Describe the scene you want to create first.");
+      return;
+    }
+    setBusy(true);
+    setClipUrl(null);
+    toast.success("Generating video…", { description: "This can take a few minutes." });
+    try {
+      const seconds = Number(duration.replace("s", "")) || 6;
+      const job = await startVideo({
+        data: {
+          prompt: `${prompt.trim()}, ${style.toLowerCase()} look, ${camera.toLowerCase()} camera move`,
+          negative: negative.trim(),
+          aspect: ratio,
+          frames: Math.round(seconds * 24),
+          frameRate: Number(fps.replace(" fps", "")) || 24,
+        },
+      });
+      for (let i = 0; i < 120; i += 1) {
+        await new Promise((r) => setTimeout(r, 5000));
+        const status = await pollVideo({ data: { id: job.id, requestId: job.requestId } });
+        if (status.status === "completed") {
+          setClipUrl(status.url ?? null);
+          void queryClient.invalidateQueries({ queryKey: ["generations"] });
+          toast.success("Video ready");
+          return;
+        }
+        if (status.status === "failed") throw new Error(status.error ?? "Video generation failed");
+      }
+      throw new Error("Video generation timed out");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Video generation failed");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
     <StudioLayout>
@@ -111,17 +154,21 @@ function VideoStudio() {
 
         <button
           type="button"
-          onClick={() =>
-            prompt.trim()
-              ? toast.success(`Queued ${count} video${count === 1 ? "" : "s"}`, {
-                  description: `${model} · ${ratio} · ${res} · ${duration} · ${camera}`,
-                })
-              : toast.error("Describe the scene you want to create first.")
-          }
-          className="w-full rounded-full bg-primary py-3 text-[14px] font-bold text-primary-foreground transition-opacity hover:opacity-90"
+          disabled={busy}
+          onClick={() => void generate()}
+          className="w-full rounded-full bg-primary py-3 text-[14px] font-bold text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
         >
-          Generate
+          {busy ? "Generating…" : "Generate"}
         </button>
+
+        {clipUrl ? (
+          <video
+            src={clipUrl}
+            controls
+            playsInline
+            className="w-full rounded-2xl border border-border bg-surface"
+          />
+        ) : null}
 
         <RecentCreations />
       </div>
