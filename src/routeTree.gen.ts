@@ -10,33 +10,180 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AudioRouteImport } from './routes/audio'
+import { Route as ImageRouteImport } from './routes/image'
+import { Route as LibraryRouteImport } from './routes/library'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as SettingsRouteImport } from './routes/settings'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as VideoRouteImport } from './routes/video'
+import { Route as ApiGenerateImageRouteImport } from './routes/api/generate-image'
+import { Route as VirtualModelIndexRouteImport } from './routes/virtual-model.index'
+import { Route as VirtualModelCreateModelRouteImport } from './routes/virtual-model.create-model'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AudioRoute = AudioRouteImport.update({
+  id: '/audio',
+  path: '/audio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ImageRoute = ImageRouteImport.update({
+  id: '/image',
+  path: '/image',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LibraryRoute = LibraryRouteImport.update({
+  id: '/library',
+  path: '/library',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VideoRoute = VideoRouteImport.update({
+  id: '/video',
+  path: '/video',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiGenerateImageRoute = ApiGenerateImageRouteImport.update({
+  id: '/api/generate-image',
+  path: '/api/generate-image',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VirtualModelIndexRoute = VirtualModelIndexRouteImport.update({
+  id: '/virtual-model/',
+  path: '/virtual-model/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VirtualModelCreateModelRoute = VirtualModelCreateModelRouteImport.update({
+  id: '/virtual-model/create-model',
+  path: '/virtual-model/create-model',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/audio': typeof AudioRoute
+  '/image': typeof ImageRoute
+  '/library': typeof LibraryRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
+  '/video': typeof VideoRoute
+  '/api/generate-image': typeof ApiGenerateImageRoute
+  '/virtual-model/create-model': typeof VirtualModelCreateModelRoute
+  '/virtual-model/': typeof VirtualModelIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/audio': typeof AudioRoute
+  '/image': typeof ImageRoute
+  '/library': typeof LibraryRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
+  '/video': typeof VideoRoute
+  '/api/generate-image': typeof ApiGenerateImageRoute
+  '/virtual-model/create-model': typeof VirtualModelCreateModelRoute
+  '/virtual-model': typeof VirtualModelIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/audio': typeof AudioRoute
+  '/image': typeof ImageRoute
+  '/library': typeof LibraryRoute
+  '/pricing': typeof PricingRoute
+  '/privacy': typeof PrivacyRoute
+  '/settings': typeof SettingsRoute
+  '/terms': typeof TermsRoute
+  '/video': typeof VideoRoute
+  '/api/generate-image': typeof ApiGenerateImageRoute
+  '/virtual-model/create-model': typeof VirtualModelCreateModelRoute
+  '/virtual-model/': typeof VirtualModelIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/audio'
+    | '/image'
+    | '/library'
+    | '/pricing'
+    | '/privacy'
+    | '/settings'
+    | '/terms'
+    | '/video'
+    | '/api/generate-image'
+    | '/virtual-model/create-model'
+    | '/virtual-model/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/audio'
+    | '/image'
+    | '/library'
+    | '/pricing'
+    | '/privacy'
+    | '/settings'
+    | '/terms'
+    | '/video'
+    | '/api/generate-image'
+    | '/virtual-model/create-model'
+    | '/virtual-model'
+  id:
+    | '__root__'
+    | '/'
+    | '/audio'
+    | '/image'
+    | '/library'
+    | '/pricing'
+    | '/privacy'
+    | '/settings'
+    | '/terms'
+    | '/video'
+    | '/api/generate-image'
+    | '/virtual-model/create-model'
+    | '/virtual-model/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AudioRoute: typeof AudioRoute
+  ImageRoute: typeof ImageRoute
+  LibraryRoute: typeof LibraryRoute
+  PricingRoute: typeof PricingRoute
+  PrivacyRoute: typeof PrivacyRoute
+  SettingsRoute: typeof SettingsRoute
+  TermsRoute: typeof TermsRoute
+  VideoRoute: typeof VideoRoute
+  ApiGenerateImageRoute: typeof ApiGenerateImageRoute
+  VirtualModelCreateModelRoute: typeof VirtualModelCreateModelRoute
+  VirtualModelIndexRoute: typeof VirtualModelIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +195,99 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/audio': {
+      id: '/audio'
+      path: '/audio'
+      fullPath: '/audio'
+      preLoaderRoute: typeof AudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/image': {
+      id: '/image'
+      path: '/image'
+      fullPath: '/image'
+      preLoaderRoute: typeof ImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/library': {
+      id: '/library'
+      path: '/library'
+      fullPath: '/library'
+      preLoaderRoute: typeof LibraryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/video': {
+      id: '/video'
+      path: '/video'
+      fullPath: '/video'
+      preLoaderRoute: typeof VideoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/generate-image': {
+      id: '/api/generate-image'
+      path: '/api/generate-image'
+      fullPath: '/api/generate-image'
+      preLoaderRoute: typeof ApiGenerateImageRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/virtual-model/': {
+      id: '/virtual-model/'
+      path: '/virtual-model'
+      fullPath: '/virtual-model/'
+      preLoaderRoute: typeof VirtualModelIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/virtual-model/create-model': {
+      id: '/virtual-model/create-model'
+      path: '/virtual-model/create-model'
+      fullPath: '/virtual-model/create-model'
+      preLoaderRoute: typeof VirtualModelCreateModelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AudioRoute: AudioRoute,
+  ImageRoute: ImageRoute,
+  LibraryRoute: LibraryRoute,
+  PricingRoute: PricingRoute,
+  PrivacyRoute: PrivacyRoute,
+  SettingsRoute: SettingsRoute,
+  TermsRoute: TermsRoute,
+  VideoRoute: VideoRoute,
+  ApiGenerateImageRoute: ApiGenerateImageRoute,
+  VirtualModelCreateModelRoute: VirtualModelCreateModelRoute,
+  VirtualModelIndexRoute: VirtualModelIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

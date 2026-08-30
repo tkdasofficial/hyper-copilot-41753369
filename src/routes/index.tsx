@@ -1,24 +1,75 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { Sidebar } from "@/components/hyper/Sidebar";
+import { TopBar } from "@/components/hyper/TopBar";
+import { PromptComposer } from "@/components/hyper/PromptComposer";
+import { ToolGrid } from "@/components/hyper/ToolGrid";
+import { Gallery } from "@/components/hyper/Gallery";
 
-// No head() here: the home route inherits title/description/og/twitter from
-// __root.tsx, and ships no og:image so serve-time hosting can inject the
-// project's social preview (explicit og:image or latest screenshot).
 export const Route = createFileRoute("/")({
+  head: () => ({
+    meta: [
+      { title: "Hyper Copilot — Generative AI Studio for Image, Video & Audio" },
+      {
+        name: "description",
+        content:
+          "Hyper Copilot is an advanced generative AI platform: turn a prompt into photoreal images, cinematic video, vectors and audio in one high-tech canvas.",
+      },
+      { property: "og:title", content: "Hyper Copilot — Generative AI Studio" },
+      {
+        property: "og:description",
+        content:
+          "Turn a prompt into photoreal images, cinematic video, vectors and audio with production-ready generative AI tools.",
+      },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
+    ],
+  }),
   component: Index,
 });
 
-// IMPORTANT: Replace this placeholder. See ./README.md for routing conventions.
 function Index() {
   return (
-    <div
-      className="flex min-h-screen items-center justify-center"
-      style={{ backgroundColor: "#fcfbf8" }}
-    >
-      <img
-        data-lovable-blank-page-placeholder="REMOVE_THIS"
-        src="https://cdn.gpteng.co/blank-app-v1.svg"
-        alt="Your app will live here!"
-      />
+    <div className="min-h-screen w-full max-w-full overflow-x-hidden bg-background">
+      <Sidebar />
+      <div className="lg:pl-[248px]">
+        <TopBar />
+
+        <main className="relative mx-auto max-w-6xl overflow-x-hidden px-4 pb-28 pt-10 sm:pt-14 lg:px-8 lg:pb-20">
+          <div
+            aria-hidden
+            className="bg-aura animate-drift pointer-events-none absolute -top-24 left-1/2 h-[420px] w-full max-w-[1100px] -translate-x-1/2 blur-[2px]"
+          />
+
+
+          <section className="relative text-center">
+            <span className="inline-flex items-center gap-2 rounded-full border border-border bg-surface/70 px-3 py-1.5 text-[11.5px] font-semibold uppercase tracking-[0.14em] text-muted-foreground backdrop-blur">
+              Hyper Image Flash is live
+            </span>
+            <h1 className="mt-5 text-[34px] font-extrabold leading-[1.05] tracking-[-0.03em] sm:text-5xl lg:text-6xl">
+              Imagine anything.
+              <br />
+              <span className="text-spectral">Then make it real.</span>
+            </h1>
+            <p className="mx-auto mt-4 max-w-xl text-[14px] leading-relaxed text-muted-foreground sm:text-base">
+              One prompt box for image, video, vector and audio models — with references, style
+              controls and commercially safe output.
+            </p>
+          </section>
+
+          <div className="relative mx-auto mt-9 max-w-3xl">
+            <PromptComposer />
+          </div>
+
+          <ToolGrid />
+          <Gallery />
+
+          <footer className="mt-20 flex flex-col items-center gap-2 border-t border-border pt-8 text-center">
+            <p className="text-[12px] text-muted-foreground">
+              Hyper Copilot · Generative AI for teams that ship
+            </p>
+          </footer>
+        </main>
+      </div>
     </div>
   );
 }
