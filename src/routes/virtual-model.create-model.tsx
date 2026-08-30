@@ -52,6 +52,7 @@ function CreateModel() {
   const [ethnicity, setEthnicity] = useState<(typeof ethnicities)[number]>(ethnicities[0]);
   const [traits, setTraits] = useState<string[]>([]);
   const [persona, setPersona] = useState("");
+  const [consistency, setConsistency] = useState(92);
   const queryClient = useQueryClient();
 
   const identityPrompt = () =>
@@ -76,6 +77,7 @@ function CreateModel() {
           name: name.trim() || "New model",
           description: `${gender} · ${age} · ${height}cm · ${body} · ${styleMode}`,
           identityPrompt: identityPrompt(),
+          consistency,
         },
       }),
     onSuccess: () => {
@@ -88,6 +90,7 @@ function CreateModel() {
     onError: (err) =>
       toast.error(err instanceof Error ? err.message : "Could not create the model"),
   });
+
 
   return (
     <StudioLayout>
