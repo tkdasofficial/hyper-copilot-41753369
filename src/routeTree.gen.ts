@@ -10,14 +10,19 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AudioRouteImport } from './routes/audio'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as ImageRouteImport } from './routes/image'
 import { Route as LibraryRouteImport } from './routes/library'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as VideoRouteImport } from './routes/video'
+import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedGettingReadyRouteImport } from './routes/_authenticated/getting-ready'
 import { Route as ApiGenerateImageRouteImport } from './routes/api/generate-image'
 import { Route as VirtualModelIndexRouteImport } from './routes/virtual-model.index'
 import { Route as VirtualModelCreateModelRouteImport } from './routes/virtual-model.create-model'
@@ -27,9 +32,18 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AudioRoute = AudioRouteImport.update({
   id: '/audio',
   path: '/audio',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ImageRoute = ImageRouteImport.update({
@@ -62,11 +76,27 @@ const TermsRoute = TermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
+const VerifyRoute = VerifyRouteImport.update({
+  id: '/verify',
+  path: '/verify',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const VideoRoute = VideoRouteImport.update({
   id: '/video',
   path: '/video',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedDashboardRoute = AuthenticatedDashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedGettingReadyRoute =
+  AuthenticatedGettingReadyRouteImport.update({
+    id: '/getting-ready',
+    path: '/getting-ready',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const ApiGenerateImageRoute = ApiGenerateImageRouteImport.update({
   id: '/api/generate-image',
   path: '/api/generate-image',
@@ -86,13 +116,17 @@ const VirtualModelCreateModelRoute = VirtualModelCreateModelRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/audio': typeof AudioRoute
+  '/auth': typeof AuthRoute
   '/image': typeof ImageRoute
   '/library': typeof LibraryRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
+  '/verify': typeof VerifyRoute
   '/video': typeof VideoRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/getting-ready': typeof AuthenticatedGettingReadyRoute
   '/api/generate-image': typeof ApiGenerateImageRoute
   '/virtual-model/create-model': typeof VirtualModelCreateModelRoute
   '/virtual-model/': typeof VirtualModelIndexRoute
@@ -100,13 +134,17 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/audio': typeof AudioRoute
+  '/auth': typeof AuthRoute
   '/image': typeof ImageRoute
   '/library': typeof LibraryRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
+  '/verify': typeof VerifyRoute
   '/video': typeof VideoRoute
+  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/getting-ready': typeof AuthenticatedGettingReadyRoute
   '/api/generate-image': typeof ApiGenerateImageRoute
   '/virtual-model/create-model': typeof VirtualModelCreateModelRoute
   '/virtual-model': typeof VirtualModelIndexRoute
@@ -114,14 +152,19 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/audio': typeof AudioRoute
+  '/auth': typeof AuthRoute
   '/image': typeof ImageRoute
   '/library': typeof LibraryRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/settings': typeof SettingsRoute
   '/terms': typeof TermsRoute
+  '/verify': typeof VerifyRoute
   '/video': typeof VideoRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/getting-ready': typeof AuthenticatedGettingReadyRoute
   '/api/generate-image': typeof ApiGenerateImageRoute
   '/virtual-model/create-model': typeof VirtualModelCreateModelRoute
   '/virtual-model/': typeof VirtualModelIndexRoute
@@ -131,13 +174,17 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/audio'
+    | '/auth'
     | '/image'
     | '/library'
     | '/pricing'
     | '/privacy'
     | '/settings'
     | '/terms'
+    | '/verify'
     | '/video'
+    | '/dashboard'
+    | '/getting-ready'
     | '/api/generate-image'
     | '/virtual-model/create-model'
     | '/virtual-model/'
@@ -145,27 +192,36 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/audio'
+    | '/auth'
     | '/image'
     | '/library'
     | '/pricing'
     | '/privacy'
     | '/settings'
     | '/terms'
+    | '/verify'
     | '/video'
+    | '/dashboard'
+    | '/getting-ready'
     | '/api/generate-image'
     | '/virtual-model/create-model'
     | '/virtual-model'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
     | '/audio'
+    | '/auth'
     | '/image'
     | '/library'
     | '/pricing'
     | '/privacy'
     | '/settings'
     | '/terms'
+    | '/verify'
     | '/video'
+    | '/_authenticated/dashboard'
+    | '/_authenticated/getting-ready'
     | '/api/generate-image'
     | '/virtual-model/create-model'
     | '/virtual-model/'
@@ -173,13 +229,16 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AudioRoute: typeof AudioRoute
+  AuthRoute: typeof AuthRoute
   ImageRoute: typeof ImageRoute
   LibraryRoute: typeof LibraryRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   SettingsRoute: typeof SettingsRoute
   TermsRoute: typeof TermsRoute
+  VerifyRoute: typeof VerifyRoute
   VideoRoute: typeof VideoRoute
   ApiGenerateImageRoute: typeof ApiGenerateImageRoute
   VirtualModelCreateModelRoute: typeof VirtualModelCreateModelRoute
@@ -195,11 +254,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/audio': {
       id: '/audio'
       path: '/audio'
       fullPath: '/audio'
       preLoaderRoute: typeof AudioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/image': {
@@ -244,12 +317,33 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/verify': {
+      id: '/verify'
+      path: '/verify'
+      fullPath: '/verify'
+      preLoaderRoute: typeof VerifyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/video': {
       id: '/video'
       path: '/video'
       fullPath: '/video'
       preLoaderRoute: typeof VideoRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/dashboard': {
+      id: '/_authenticated/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof AuthenticatedDashboardRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/getting-ready': {
+      id: '/_authenticated/getting-ready'
+      path: '/getting-ready'
+      fullPath: '/getting-ready'
+      preLoaderRoute: typeof AuthenticatedGettingReadyRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/api/generate-image': {
       id: '/api/generate-image'
@@ -275,15 +369,31 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedGettingReadyRoute: typeof AuthenticatedGettingReadyRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedGettingReadyRoute: AuthenticatedGettingReadyRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AudioRoute: AudioRoute,
+  AuthRoute: AuthRoute,
   ImageRoute: ImageRoute,
   LibraryRoute: LibraryRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   SettingsRoute: SettingsRoute,
   TermsRoute: TermsRoute,
+  VerifyRoute: VerifyRoute,
   VideoRoute: VideoRoute,
   ApiGenerateImageRoute: ApiGenerateImageRoute,
   VirtualModelCreateModelRoute: VirtualModelCreateModelRoute,
