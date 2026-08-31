@@ -955,17 +955,18 @@ export function PromptComposer() {
       </div>
 
       <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-        {suggestions.map((s) => (
+        {activeSuggestions.map((s) => (
           <button
             key={s}
             type="button"
             onClick={() => setValue(s)}
-            className="truncate rounded-full border border-border bg-surface/60 px-3 py-1.5 text-[12px] text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground"
+            className="max-w-full truncate rounded-full border border-border bg-surface/60 px-3 py-1.5 text-[11.5px] text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground sm:text-[12px]"
           >
             {s}
           </button>
         ))}
-</div>
+      </div>
+
 
       <ResultsGrid results={results} generating={generating} />
     </div>
