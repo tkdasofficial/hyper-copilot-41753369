@@ -107,12 +107,29 @@ const advancedModes = [
   { id: "inpaint", name: "Inpaint", note: "Edit a masked region" },
 ];
 
-const suggestions = [
-  "a chrome jellyfish drifting through a neon canyon",
-  "editorial product shot of a matte black perfume bottle",
-  "isometric cyberpunk apartment, warm rim light",
-  "hand-drawn botanical vector set, single line",
-];
+const suggestionsByModality: Record<string, string[]> = {
+  Image: [
+    "a chrome jellyfish drifting through a neon canyon",
+    "editorial product shot of a matte black perfume bottle",
+    "isometric cyberpunk apartment, warm rim light",
+  ],
+  Video: [
+    "slow dolly through a rain-soaked neon alley",
+    "macro shot of coffee swirling into milk",
+    "drone rise over misty mountain ridges at dawn",
+  ],
+  Audio: [
+    "Welcome back — your studio is ready when you are.",
+    "A calm lo-fi beat with warm tape hiss",
+    "Energetic sports highlight bed with big drums",
+  ],
+  Vector: [
+    "hand-drawn botanical vector set, single line",
+    "flat vector app icon of a paper plane",
+    "minimal geometric logo mark, two colors",
+  ],
+};
+
 
 function Chip({
   icon: Icon,
