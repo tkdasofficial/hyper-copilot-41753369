@@ -221,11 +221,42 @@ export function PromptComposer() {
   const toggleMode = (id: string) =>
     setModes((m) => (m.includes(id) ? m.filter((x) => x !== id) : [...m, id]));
 
-  const advancedLabel = useMemo(() => {
-    if (modes.length === 0) return "Advanced";
+  /** Only surface controls the active modality + model actually supports. */
+  const supportsRatio = active !== "Audio";
+  const supportsStyle = active !== "Audio";
+  const supportsReferences =
+    active === "Video" ||
+    ((active === "Image" || active === "Vector") && model.id !== "hyper-image-speed");
+
+  const availableModes = useMemo(() => {
+    if (active !== "Image" && active !== "Vector") return [];
+    if (!supportsReferences) return [];
+    if (active === "Vector") return advancedModes.filter((m) => m.id !== "inpaint");
+    return advancedModes;
+  }, [active, supportsReferences]);
+
+  const activeRatios = useMemo(
+    () => (active === "Video" ? ratios.filter((r) => r.label !== "21:9") : ratios),
+    [active],
+  );
+
+  const activeSuggestions = suggestionsByModality[active] ?? suggestionsByModality["Image"]!;
+
+  const settingsIcon = active === "Audio" ? AudioLines : SlidersHorizontal;
+  const settingsLabel = useMemo(() => {
+    if (active === "Video") return `${videoDuration}s · ${videoFps}fps · ${videoRes}`;
+    if (active === "Audio") return audioMode === "speech" ? `Speech · ${voice}` : "Music";
+    if (modes.length === 0) return `${count[0]}× output`;
     const first = advancedModes.find((m) => m.id === modes[0])?.name ?? "Advanced";
     return modes.length > 1 ? `${first} +${modes.length - 1}` : first;
-  }, [modes]);
+  }, [active, videoDuration, videoFps, videoRes, audioMode, voice, modes, count]);
+  const settingsActive = active === "Video" || active === "Audio" || modes.length > 0;
+
+  useEffect(() => {
+    if (!activeRatios.some((r) => r.label === ratio.label)) setRatio(activeRatios[0]!);
+    if (!supportsReferences && active !== "Audio" && modes.length) setModes([]);
+  }, [activeRatios, ratio.label, supportsReferences, active, modes.length]);
+
 
   const onFiles = (files: FileList | null) => {
     if (!files) return;
