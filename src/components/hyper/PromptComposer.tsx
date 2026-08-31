@@ -483,14 +483,16 @@ export function PromptComposer() {
                 className="hidden"
                 onChange={(e) => onFiles(e.target.files)}
               />
-              <button
-                type="button"
-                aria-label="Add reference image"
-                onClick={() => fileRef.current?.click()}
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border bg-surface-2/70 text-muted-foreground transition-colors hover:text-foreground"
-              >
-                <Plus className="h-4 w-4" strokeWidth={2.2} />
-              </button>
+              {supportsReferences ? (
+                <button
+                  type="button"
+                  aria-label={active === "Video" ? "Add frame image" : "Add reference image"}
+                  onClick={() => fileRef.current?.click()}
+                  className="grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border bg-surface-2/70 text-muted-foreground transition-colors hover:border-border-strong hover:text-foreground"
+                >
+                  <Plus className="h-4 w-4" strokeWidth={2.2} />
+                </button>
+              ) : null}
 
               {/* Model */}
               <Popover>
@@ -499,9 +501,9 @@ export function PromptComposer() {
                     <Chip icon={Wand2}>{model.name}</Chip>
                   </span>
                 </PopoverTrigger>
-                <PopoverContent align="start" className="w-64 p-1.5">
+                <PopoverContent align="start" className="w-[min(17rem,calc(100vw-2rem))] p-1.5">
                   <p className="px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                    Generative model
+                    {active} model
                   </p>
                   {models.map((m) => (
                     <OptionRow
@@ -512,116 +514,136 @@ export function PromptComposer() {
                       onClick={() => setModel(m)}
                     />
                   ))}
-                  <p className="px-2.5 pb-1 pt-2 text-[11px] text-muted-foreground">
-                    More models coming soon.
-                  </p>
                 </PopoverContent>
               </Popover>
 
-              {/* Aspect ratio */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <span>
-                    <Chip icon={Ratio}>{ratio.label}</Chip>
-                  </span>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-72 p-2">
-                  <p className="px-1.5 pb-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                    Aspect ratio
-                  </p>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {ratios.map((r) => (
-                      <button
-                        key={r.label}
-                        type="button"
-                        onClick={() => setRatio(r)}
-                        title={r.note}
-                        className={cn(
-                          "flex flex-col items-center gap-1.5 rounded-xl border px-2 py-2.5 transition-colors",
-                          r.label === ratio.label
-                            ? "border-border-strong bg-surface-2"
-                            : "border-border hover:bg-surface-2",
-                        )}
-                      >
-                        <span
-                          className="rounded-[4px] border border-border-strong"
-                          style={{
-                            width: `${(r.w / Math.max(r.w, r.h)) * 26}px`,
-                            height: `${(r.h / Math.max(r.w, r.h)) * 26}px`,
-                          }}
-                        />
-                        <span className="text-[11px] font-semibold text-foreground">{r.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </PopoverContent>
-              </Popover>
-
-              {/* Style */}
-              <Popover>
-                <PopoverTrigger asChild>
-                  <span>
-                    <Chip icon={Sparkles} active={style.id === "heaven"}>
-                      {style.name}
-                    </Chip>
-                  </span>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-72 p-1.5">
-                  <p className="px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                    Style
-                  </p>
-                  <div className="max-h-64 overflow-y-auto">
-                    {styles.map((s) => (
-                      <OptionRow
-                        key={s.id}
-                        title={s.name}
-                        note={s.note}
-                        accent={s.signature}
-                        selected={s.id === style.id}
-                        onClick={() => setStyle(s)}
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-1 border-t border-border px-2.5 pb-1 pt-3">
-                    <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-foreground">
-                      <span>Style strength</span>
-                      <span className="text-muted-foreground">{styleStrength[0]}%</span>
-                    </div>
-                    <Slider
-                      value={styleStrength}
-                      onValueChange={setStyleStrength}
-                      max={100}
-                      step={1}
-                    />
-                  </div>
-                </PopoverContent>
-              </Popover>
-
-              {/* Video settings */}
-              {active === "Video" ? (
+              {/* Aspect ratio — visual */}
+              {supportsRatio ? (
                 <Popover>
                   <PopoverTrigger asChild>
                     <span>
-                      <Chip icon={SlidersHorizontal} active>
-                        {`${videoDuration}s · ${videoFps}fps · ${videoRes}`}
+                      <Chip icon={Ratio}>{ratio.label}</Chip>
+                    </span>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    align="start"
+                    className="w-[min(20rem,calc(100vw-2rem))] p-2.5"
+                  >
+                    <p className="pb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                      Aspect ratio
+                    </p>
+                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                      {activeRatios.map((r) => {
+                        const selected = r.label === ratio.label;
+                        return (
+                          <button
+                            key={r.label}
+                            type="button"
+                            onClick={() => setRatio(r)}
+                            title={r.note}
+                            className={cn(
+                              "flex flex-col items-center gap-1.5 rounded-xl border p-2 transition-colors",
+                              selected
+                                ? "border-border-strong bg-surface-2"
+                                : "border-border hover:bg-surface-2",
+                            )}
+                          >
+                            <span className="grid h-9 w-full place-items-center">
+                              <span
+                                className={cn(
+                                  "rounded-[4px] border-2",
+                                  selected
+                                    ? "border-primary bg-primary/15"
+                                    : "border-border-strong",
+                                )}
+                                style={{
+                                  width: `${(r.w / Math.max(r.w, r.h)) * 34}px`,
+                                  height: `${(r.h / Math.max(r.w, r.h)) * 34}px`,
+                                }}
+                              />
+                            </span>
+                            <span className="text-[11px] font-bold leading-none text-foreground">
+                              {r.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              ) : null}
+
+              {/* Style */}
+              {supportsStyle ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <span>
+                      <Chip icon={Sparkles} active={style.id === "heaven"}>
+                        {style.name}
                       </Chip>
                     </span>
                   </PopoverTrigger>
-                  <PopoverContent align="start" className="w-80 p-2.5">
-                    <p className="pb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                      Video settings
+                  <PopoverContent align="start" className="w-[min(18rem,calc(100vw-2rem))] p-1.5">
+                    <p className="px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                      Style
                     </p>
+                    <div className="max-h-56 overflow-y-auto">
+                      {styles.map((s) => (
+                        <OptionRow
+                          key={s.id}
+                          title={s.name}
+                          note={s.note}
+                          accent={s.signature}
+                          selected={s.id === style.id}
+                          onClick={() => setStyle(s)}
+                        />
+                      ))}
+                    </div>
+                    <div className="mt-1 border-t border-border px-2.5 pb-1 pt-3">
+                      <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-foreground">
+                        <span>Style strength</span>
+                        <span className="text-muted-foreground">{styleStrength[0]}%</span>
+                      </div>
+                      <Slider
+                        value={styleStrength}
+                        onValueChange={setStyleStrength}
+                        max={100}
+                        step={1}
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              ) : null}
+
+              {/* Per-modality settings */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <span>
+                    <Chip icon={settingsIcon} active={settingsActive}>
+                      {settingsLabel}
+                    </Chip>
+                  </span>
+                </PopoverTrigger>
+                <PopoverContent
+                  align="start"
+                  className="max-h-[70vh] w-[min(21rem,calc(100vw-2rem))] overflow-y-auto p-2.5"
+                >
+                  <p className="pb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                    {active} settings
+                  </p>
+
+                  {active === "Video" ? (
                     <div className="space-y-3">
                       <div>
                         <p className="mb-1.5 text-[12px] font-semibold">Duration</p>
-                        <div className="flex gap-1.5">
+                        <div className="grid grid-cols-4 gap-1.5">
                           {VIDEO_DURATIONS.map((d) => (
                             <button
                               key={d}
                               type="button"
                               onClick={() => setVideoDuration(d)}
                               className={cn(
-                                "flex-1 rounded-xl border px-2 py-1.5 text-[12px] font-semibold transition-colors",
+                                "rounded-xl border px-2 py-1.5 text-[12px] font-semibold transition-colors",
                                 videoDuration === d
                                   ? "border-border-strong bg-surface-2"
                                   : "border-border hover:bg-surface-2",
@@ -634,14 +656,14 @@ export function PromptComposer() {
                       </div>
                       <div>
                         <p className="mb-1.5 text-[12px] font-semibold">Frame rate</p>
-                        <div className="flex gap-1.5">
+                        <div className="grid grid-cols-3 gap-1.5">
                           {VIDEO_FPS.map((f) => (
                             <button
                               key={f}
                               type="button"
                               onClick={() => setVideoFps(f)}
                               className={cn(
-                                "flex-1 rounded-xl border px-2 py-1.5 text-[12px] font-semibold transition-colors",
+                                "rounded-xl border px-2 py-1.5 text-[12px] font-semibold transition-colors",
                                 videoFps === f
                                   ? "border-border-strong bg-surface-2"
                                   : "border-border hover:bg-surface-2",
@@ -654,14 +676,14 @@ export function PromptComposer() {
                       </div>
                       <div>
                         <p className="mb-1.5 text-[12px] font-semibold">Resolution</p>
-                        <div className="flex gap-1.5">
+                        <div className="grid grid-cols-3 gap-1.5">
                           {VIDEO_RESOLUTIONS.map((r) => (
                             <button
                               key={r}
                               type="button"
                               onClick={() => setVideoRes(r)}
                               className={cn(
-                                "flex-1 rounded-xl border px-2 py-1.5 text-[12px] font-semibold transition-colors",
+                                "rounded-xl border px-2 py-1.5 text-[12px] font-semibold transition-colors",
                                 videoRes === r
                                   ? "border-border-strong bg-surface-2"
                                   : "border-border hover:bg-surface-2",
@@ -703,184 +725,174 @@ export function PromptComposer() {
                         <Switch checked={seedLocked} onCheckedChange={setSeedLocked} />
                       </div>
                     </div>
-                  </PopoverContent>
-                </Popover>
-              ) : null}
+                  ) : null}
 
-              {/* Audio settings */}
-              {active === "Audio" ? (
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <span>
-                      <Chip icon={AudioLines} active>
-                        {audioMode === "speech" ? `Speech · ${voice}` : "Music"}
-                      </Chip>
-                    </span>
-                  </PopoverTrigger>
-                  <PopoverContent align="start" className="w-80 p-2.5">
-                    <p className="pb-2 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                      Audio settings
-                    </p>
-                    <div className="mb-3 flex gap-1.5">
-                      {(["speech", "music"] as const).map((m) => (
-                        <button
-                          key={m}
-                          type="button"
-                          onClick={() => setAudioMode(m)}
-                          className={cn(
-                            "flex-1 rounded-xl border px-2 py-1.5 text-[12px] font-semibold capitalize transition-colors",
-                            audioMode === m
-                              ? "border-border-strong bg-surface-2"
-                              : "border-border hover:bg-surface-2",
-                          )}
-                        >
-                          {m === "speech" ? "Text to speech" : "Text to music"}
-                        </button>
-                      ))}
-                    </div>
-                    {audioMode === "speech" ? (
-                      <div className="space-y-3">
-                        <div>
-                          <p className="mb-1.5 text-[12px] font-semibold">Voice</p>
-                          <div className="max-h-44 overflow-y-auto rounded-xl border border-border p-1">
-                            {VOICES.map((v) => (
-                              <OptionRow
-                                key={v.id}
-                                title={v.label}
-                                note={v.note}
-                                selected={voice === v.id}
-                                onClick={() => setVoice(v.id)}
-                              />
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <p className="mb-1.5 text-[12px] font-semibold">Tone</p>
-                          <div className="flex flex-wrap gap-1.5">
-                            {SPEECH_TONES.map((t) => (
-                              <button
-                                key={t}
-                                type="button"
-                                onClick={() => setTone(t)}
-                                className={cn(
-                                  "rounded-full border px-2.5 py-1 text-[12px] font-semibold transition-colors",
-                                  tone === t
-                                    ? "border-border-strong bg-surface-2"
-                                    : "border-border hover:bg-surface-2",
-                                )}
-                              >
-                                {t}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="mb-2 flex items-center justify-between text-[12px] font-semibold">
-                            <span>Pace</span>
-                            <span className="text-muted-foreground">{pace[0]}%</span>
-                          </div>
-                          <Slider value={pace} onValueChange={setPace} min={70} max={130} step={1} />
-                        </div>
+                  {active === "Audio" ? (
+                    <div>
+                      <div className="mb-3 grid grid-cols-2 gap-1.5">
+                        {(["speech", "music"] as const).map((m) => (
+                          <button
+                            key={m}
+                            type="button"
+                            onClick={() => setAudioMode(m)}
+                            className={cn(
+                              "rounded-xl border px-2 py-1.5 text-[12px] font-semibold transition-colors",
+                              audioMode === m
+                                ? "border-border-strong bg-surface-2"
+                                : "border-border hover:bg-surface-2",
+                            )}
+                          >
+                            {m === "speech" ? "Text to speech" : "Text to music"}
+                          </button>
+                        ))}
                       </div>
-                    ) : (
-                      <div className="space-y-3">
-                        <div>
-                          <div className="mb-2 flex items-center justify-between text-[12px] font-semibold">
-                            <span>Tempo</span>
-                            <span className="text-muted-foreground">{musicTempo[0]} BPM</span>
+                      {audioMode === "speech" ? (
+                        <div className="space-y-3">
+                          <div>
+                            <p className="mb-1.5 text-[12px] font-semibold">Voice</p>
+                            <div className="max-h-44 overflow-y-auto rounded-xl border border-border p-1">
+                              {VOICES.map((v) => (
+                                <OptionRow
+                                  key={v.id}
+                                  title={v.label}
+                                  note={v.note}
+                                  selected={voice === v.id}
+                                  onClick={() => setVoice(v.id)}
+                                />
+                              ))}
+                            </div>
                           </div>
-                          <Slider
-                            value={musicTempo}
-                            onValueChange={setMusicTempo}
-                            min={40}
-                            max={220}
-                            step={1}
-                          />
+                          <div>
+                            <p className="mb-1.5 text-[12px] font-semibold">Tone</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {SPEECH_TONES.map((t) => (
+                                <button
+                                  key={t}
+                                  type="button"
+                                  onClick={() => setTone(t)}
+                                  className={cn(
+                                    "rounded-full border px-2.5 py-1 text-[12px] font-semibold transition-colors",
+                                    tone === t
+                                      ? "border-border-strong bg-surface-2"
+                                      : "border-border hover:bg-surface-2",
+                                  )}
+                                >
+                                  {t}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <div className="mb-2 flex items-center justify-between text-[12px] font-semibold">
+                              <span>Pace</span>
+                              <span className="text-muted-foreground">{pace[0]}%</span>
+                            </div>
+                            <Slider
+                              value={pace}
+                              onValueChange={setPace}
+                              min={70}
+                              max={130}
+                              step={1}
+                            />
+                          </div>
                         </div>
-                        <div>
-                          <div className="mb-2 flex items-center justify-between text-[12px] font-semibold">
-                            <span>Duration</span>
-                            <span className="text-muted-foreground">{musicSeconds[0]}s</span>
+                      ) : (
+                        <div className="space-y-3">
+                          <div>
+                            <div className="mb-2 flex items-center justify-between text-[12px] font-semibold">
+                              <span>Tempo</span>
+                              <span className="text-muted-foreground">{musicTempo[0]} BPM</span>
+                            </div>
+                            <Slider
+                              value={musicTempo}
+                              onValueChange={setMusicTempo}
+                              min={40}
+                              max={220}
+                              step={1}
+                            />
                           </div>
-                          <Slider
-                            value={musicSeconds}
-                            onValueChange={setMusicSeconds}
-                            min={10}
-                            max={120}
-                            step={5}
-                          />
+                          <div>
+                            <div className="mb-2 flex items-center justify-between text-[12px] font-semibold">
+                              <span>Duration</span>
+                              <span className="text-muted-foreground">{musicSeconds[0]}s</span>
+                            </div>
+                            <Slider
+                              value={musicSeconds}
+                              onValueChange={setMusicSeconds}
+                              min={10}
+                              max={120}
+                              step={5}
+                            />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-[12px] font-semibold">Instrumental only</span>
+                            <Switch checked={instrumental} onCheckedChange={setInstrumental} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+
+                  {active === "Image" || active === "Vector" ? (
+                    <div>
+                      {availableModes.length ? (
+                        <div className="mb-1">
+                          {availableModes.map((m) => (
+                            <OptionRow
+                              key={m.id}
+                              title={m.name}
+                              note={m.note}
+                              selected={modes.includes(m.id)}
+                              onClick={() => toggleMode(m.id)}
+                            />
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="pb-2 text-[11px] text-muted-foreground">
+                          {model.name} is text to image only.
+                        </p>
+                      )}
+                      <div className="space-y-3 border-t border-border pt-3">
+                        <div>
+                          <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-foreground">
+                            <span>Variations</span>
+                            <span className="text-muted-foreground">{count[0]}</span>
+                          </div>
+                          <Slider value={count} onValueChange={setCount} min={1} max={8} step={1} />
                         </div>
                         <div className="flex items-center justify-between">
-                          <span className="text-[12px] font-semibold">Instrumental only</span>
-                          <Switch checked={instrumental} onCheckedChange={setInstrumental} />
+                          <span className="text-[12px] font-semibold text-foreground">
+                            Lock seed
+                            <span className="ml-1.5 font-normal text-muted-foreground">#{seed}</span>
+                          </span>
+                          <Switch checked={seedLocked} onCheckedChange={setSeedLocked} />
                         </div>
+                        {supportsReferences ? (
+                          <button
+                            type="button"
+                            onClick={() => fileRef.current?.click()}
+                            className="w-full rounded-xl border border-border px-3 py-2 text-[12px] font-semibold text-foreground transition-colors hover:bg-surface-2"
+                          >
+                            Upload image {refs.length ? `(${refs.length})` : ""}
+                          </button>
+                        ) : null}
                       </div>
-                    )}
-                  </PopoverContent>
-                </Popover>
-              ) : null}
-
-              {/* Advanced */}
-              {active === "Image" || active === "Vector" ? (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <span>
-                    <Chip icon={SlidersHorizontal} active={modes.length > 0}>
-                      {advancedLabel}
-                    </Chip>
-                  </span>
-                </PopoverTrigger>
-
-                <PopoverContent align="start" className="w-80 p-1.5">
-                  <p className="px-2.5 py-1.5 text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
-                    Advanced image controls
-                  </p>
-                  {advancedModes.map((m) => (
-                    <OptionRow
-                      key={m.id}
-                      title={m.name}
-                      note={m.note}
-                      selected={modes.includes(m.id)}
-                      onClick={() => toggleMode(m.id)}
-                    />
-                  ))}
-                  <div className="mt-1 space-y-3 border-t border-border px-2.5 pb-1 pt-3">
-                    <div>
-                      <div className="mb-2 flex items-center justify-between text-[12px] font-semibold text-foreground">
-                        <span>Variations</span>
-                        <span className="text-muted-foreground">{count[0]}</span>
-                      </div>
-                      <Slider value={count} onValueChange={setCount} min={1} max={8} step={1} />
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-[12px] font-semibold text-foreground">
-                        Lock seed
-                        <span className="ml-1.5 font-normal text-muted-foreground">#{seed}</span>
-                      </span>
-                      <Switch checked={seedLocked} onCheckedChange={setSeedLocked} />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => fileRef.current?.click()}
-                      className="w-full rounded-xl border border-border px-3 py-2 text-[12px] font-semibold text-foreground transition-colors hover:bg-surface-2"
-                    >
-                      Upload image {refs.length ? `(${refs.length})` : ""}
-                    </button>
-                  </div>
+                  ) : null}
                 </PopoverContent>
               </Popover>
-              ) : null}
 
-
-
-<Chip
+              <Chip
                 icon={Shuffle}
                 caret={false}
-                onClick={() => setValue(suggestions[Math.floor(Math.random() * suggestions.length)]!)}
+                onClick={() =>
+                  setValue(activeSuggestions[Math.floor(Math.random() * activeSuggestions.length)]!)
+                }
               >
                 Surprise me
               </Chip>
             </div>
+
 
             <button
               type="button"
